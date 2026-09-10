@@ -4,7 +4,7 @@ $gitRoot = Join-Path $workspaceRoot '.tools/git'
 $previousPath = $env:PATH
 try {
     $env:PATH = (Join-Path $gitRoot 'mingw64/bin') + ';' + $env:PATH
-    & (Join-Path $gitRoot 'cmd/git.exe') @GitArgs
+    & (Join-Path $gitRoot 'cmd/git.exe') "--exec-path=$(Join-Path $gitRoot 'mingw64/bin')" @GitArgs
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 } finally {
     $env:PATH = $previousPath
