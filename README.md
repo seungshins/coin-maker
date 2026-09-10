@@ -10,6 +10,7 @@ cd E:\workspace\coin-maker
 .\tools\dev.ps1 play   # 게임 실행
 .\tools\dev.ps1 test   # 계산/좌표/충돌 테스트
 .\tools\git.ps1 status
+.\tools\publish.ps1    # GitHub 장치 로그인 후 main 업로드
 ```
 
 다른 PC에서는 Godot 4.7.2 일반판으로 `game/project.godot`를 열면 됩니다. 개발 스크립트는 위 도구 폴더 구성을 전제로 합니다. 개발 실행 데이터는 `.runtime`에 보관되며 엔진 바이너리와 함께 GitHub에 포함하지 않습니다.

@@ -10,6 +10,7 @@
 - .NET SDK, Unity, Node 기반 게임 빌드, 서버/DB: 현재 게임 실행에 필요하지 않다.
 - Windows export templates: 배포용 exe 제작 시 엔진과 같은 4.7.2 버전이 필요하다. 아직 설치하지 않았다.
 - Git: 버전 관리에 필요. 현재 환경의 Git HTTPS helper 문제로 원격 동기화가 미완료다. 로컬 코드는 보존되어 있다.
+- 작업 폴더를 `E:\workspace\coin-maker`로 이전했다. 원격 최초 이력을 복제했으며 MinGit과 helper 경로를 준비했다. 업로드는 이 실행 환경의 GitHub 인증/Windows 인증서 접근 실패로 아직 미완료다. 일반 PowerShell에서 `tools/publish.ps1`로 장치 로그인과 업로드를 수행할 수 있다. 인증 정보는 저장소 밖 DPAPI 저장소에 보관한다.
 - 외부 그림 편집기와 음원 도구: 실제 에셋 제작 시 선택한다. 현재 도형은 코드로 그리며 별도 구매 에셋이 없다.
 
 Godot 공식 시스템 요구사항은 [공식 문서](https://docs.godotengine.org/en/stable/about/system_requirements.html)를 참고한다. 실제 게임 최소사양은 부하 측정 후 결정한다.
