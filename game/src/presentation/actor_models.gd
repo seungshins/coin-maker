@@ -29,11 +29,16 @@ func build(parent: Node3D, kind: String) -> void:
 		leg.name = "LeftLeg" if side<0 else "RightLeg"
 		leg.position=Vector3(side*.14,.48,0)
 		body.add_child(leg)
-		segment(leg,Vector3(0,-.21,0),.09,.39,skin)
-		view.box(leg,Vector3(0,-.4,.08),Vector3(.17,.12,.26),Color("493e30"))
+		segment(leg,Vector3(0,-.10,0),.11,.24,skin)
+		var knee:=Node3D.new();knee.name="Knee";knee.position.y=-.20;leg.add_child(knee)
+		segment(knee,Vector3(0,-.10,-.035 if kind=="satyr" else 0),.075,.23,skin.darkened(.18))
+		for hoof in [-1,1]:view.box(knee,Vector3(hoof*.044,-.22,.06),Vector3(.08,.10,.20),Color("29231f"))
 		var arm:=Node3D.new();arm.name="Arm%d"%side;arm.position=Vector3(side*.29,.88,0);body.add_child(arm)
 		segment(arm,Vector3.ZERO,.14,.2,bronze)
-		segment(arm,Vector3(side*.07,-.17,0),.08,.35,skin)
+		segment(arm,Vector3(side*.025,-.09,0),.105,.24,skin)
+		var elbow:=Node3D.new();elbow.name="Elbow";elbow.position=Vector3(side*.035,-.20,0);arm.add_child(elbow)
+		segment(elbow,Vector3(0,-.095,.04),.075,.23,skin)
+		segment(elbow,Vector3(0,-.20,.06),.08,.16,skin.darkened(.1))
 	var head:=SphereMesh.new()
 	head.radius=.19
 	head.height=.4
@@ -80,7 +85,7 @@ func build(parent: Node3D, kind: String) -> void:
 	var detail=preload("res://src/presentation/warrior.gd").new(view)
 	for side in [-1,1]:
 		detail.ellipsoid(body,Vector3(side*.12,.91,.14),Vector3(.14,.14,.075),skin)
-		detail.ellipsoid(body,Vector3(side*.34,.79,.025),Vector3(.10,.16,.10),skin)
+		detail.ellipsoid(body.get_node("Arm%d"%side),Vector3(0,-.075,.015),Vector3(.105,.14,.10),skin)
 		for j in range(3):detail.ellipsoid(body,Vector3(side*.065,.78-j*.07,.21),Vector3(.068,.04,.025),skin.darkened(.12))
 		for j in range(4):
 			view.box(body,Vector3(side*(.07+j*.055),.49,.24-j*.02),Vector3(.043,.22,.04),Color("372921"))
@@ -90,7 +95,15 @@ func build(parent: Node3D, kind: String) -> void:
 			for j in range(3):
 				var spike:=CylinderMesh.new();spike.top_radius=0;spike.bottom_radius=.035;spike.height=.15
 				view.mesh(body,spike,Vector3(side*(.22+j*.07),1.13,0),Color("cfb78c"))
+	if kind=="satyr":
+		detail.ellipsoid(body,Vector3(0,1.16,.16),Vector3(.11,.12,.085),Color("302723"))
+		for side in [-1,1]:
+			detail.ellipsoid(body,Vector3(side*.18,1.26,0),Vector3(.12,.055,.05),skin)
+			for tuft in range(5):detail.ellipsoid(body.get_node("LeftLeg" if side<0 else "RightLeg"),Vector3(side*.045,-.035-tuft*.025,-.025),Vector3(.085,.055,.085),Color("372c26"))
 	if kind=="cyclops":
+		body.scale=Vector3(.96,.85,.9)
+		detail.ellipsoid(body,Vector3(0,1.24,.19),Vector3(.045,.08,.06),skin)
+		for side in [-1,1]:detail.ellipsoid(body,Vector3(side*.13,1.20,.12),Vector3(.09,.08,.07),skin.darkened(.1))
 		detail.ellipsoid(body,Vector3(0,1.16,.15),Vector3(.13,.065,.08),skin.darkened(.25))
 		view.box(body,Vector3(0,1.30,.19),Vector3(.17,.035,.035),skin.darkened(.3))
 
@@ -121,6 +134,7 @@ func build(parent: Node3D, kind: String) -> void:
 	for part in weapon.get_children():part.position-=grip
 	weapon.position=grip
 	weapon.set_meta("rest",grip)
+	preload("res://src/presentation/anatomy.gd").new(view).detail(parent,kind)
 
 func segment(parent:Node3D,p:Vector3,radius:float,height:float,color:Color)->void:
 	var shape:=CapsuleMesh.new()
@@ -137,5 +151,12 @@ func pose(parent:Node3D,phase:float,spin:bool)->void:
 	var body:=parent.get_node("Model")
 	body.get_node("LeftLeg").rotation.x=sin(phase)*.4
 	body.get_node("RightLeg").rotation.x=-sin(phase)*.4
+	body.position.y=absf(sin(phase))*.018
+	for side in [-1,1]:
+		var stride:float=sin(phase)*side
+		body.get_node("LeftLeg/Knee" if side<0 else "RightLeg/Knee").rotation.x=maxf(0,-stride)*.8+(.2 if parent.get_meta("model_kind")=="satyr" else 0)
+		body.get_node("Arm%d"%side).rotation.x=-stride*.3
+		body.get_node("Arm%d/Elbow"%side).rotation.x=-.25-maxf(0,stride)*.35
 	body.get_node("Weapon").rotation.y=view.clock*18 if spin else sin(view.game.attack_flash*12)*.9
+	preload("res://src/presentation/anatomy.gd").new(view).attach_weapon(body)
 	if spin: parent.rotation.y=view.clock*18

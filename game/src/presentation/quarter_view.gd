@@ -144,6 +144,10 @@ func refresh(delta: float) -> void:
 		enemy.scale = Vector3.ONE * (1.75 if e.kind == "boss" else (1.2 if e.get("elite", false) else 1.0))
 		pose(enemy, clock * 8 + e.id, false)
 		if e.kind=="boss":boss_pose(enemy,e)
+		elif enemy.has_node("Model/Arm1/Elbow/Hand"):
+			var body:Node3D=enemy.get_node("Model");var swing:float=clampf(float(e.windup)*3,0,1)
+			body.get_node("Arm1").rotation.x=-swing*1.8
+			preload("res://src/presentation/anatomy.gd").new(self).attach_weapon(body)
 		if enemy.has_node("Art"): enemy.get_node("Art").modulate = Color(1.45, 1.2, 1.1) if e.hit > 0 else Color.WHITE
 		if e.dead:
 			enemy.scale.y *= maxf(0.05, e.death_time / 0.8)
@@ -171,6 +175,7 @@ func refresh(delta: float) -> void:
 			for side in [-1,1]:
 				var arm=spirit.get_node_or_null("Model/Arm%d"%side)
 				if arm!=null:arm.rotation.x=-swing*.9
+		if spirit.has_node("Model/Arm1/Elbow/Hand"):preload("res://src/presentation/anatomy.gd").new(self).attach_weapon(spirit.get_node("Model"))
 		health_bar("minionhp%d" % i, spirit.position + Vector3(0, 1.3, 0), m.hp / m.max_hp, Color("75dcfa"))
 	for i in range(game.bolts.size()):
 		var bolt: Dictionary = game.bolts[i]
@@ -658,6 +663,11 @@ func actor_finish(node:Node)->void:
 			if old is StandardMaterial3D:
 				var mat:=StandardMaterial3D.new();mat.albedo_color=old.albedo_color
 				mat.roughness=.62;mat.metallic=.4 if old.albedo_color.r>.45 and old.albedo_color.b<.3 else .0
+				mat.cull_mode=old.cull_mode
+				var texture:NoiseTexture2D=actor_grain()
+				mat.detail_enabled=true;mat.detail_albedo=texture;mat.detail_blend_mode=BaseMaterial3D.BLEND_MODE_MUL
+				mat.detail_uv_layer=BaseMaterial3D.DETAIL_UV_1
+				mat.uv1_scale=Vector3(3,3,3)
 				child.material_override=mat
 		actor_finish(child)
 func boss_pose(node:Node3D,e:Dictionary)->void:
@@ -678,7 +688,14 @@ func boss_pose(node:Node3D,e:Dictionary)->void:
 		body.rotation.x=.2*release
 	for side in [-1,1]:
 		var arm=body.get_node_or_null("Arm%d"%side)
-		if arm!=null:arm.rotation.x=-charge*1.7 if e.windup>0 else release*.6
+		if arm!=null:
+			var follow:float=clampf((1-release)*5,0,1)
+			arm.rotation.x=-charge*2.65 if e.windup>0 else (lerpf(-2.65,.25,follow) if release>.8 else .25*release)
+			arm.rotation.z=(-charge*.9 if e.windup>0 else release*.9) if type=="sweep" else 0.0
+			arm.get_node("Elbow").rotation.x=-.2-charge*.7 if e.windup>0 else -.15
+	preload("res://src/presentation/anatomy.gd").new(self).attach_weapon(body)
+	# Hammer/staff shafts are authored vertically in the grip frame.
+	weapon.rotate_object_local(Vector3.RIGHT,-PI/2)
 func boss_warning(e:Dictionary)->void:
 	var type:String=e.get("boss_attack","slam")
 	var label:String={"slam":"내려찍기 · 원 밖으로", "sweep":"큰 휘두르기 · 뒤로 회피", "gaze":"석화 시선 · 측면으로", "poison_fan":"독침 부채 · 측면으로"}.get(type,"")
@@ -705,3 +722,11 @@ func boss_weapon(node:Node3D,kind:String)->void:
 		var handle:=cylinder(weapon,Vector3(0,0,.27),.045,.8,Color("4e3020"));handle.rotation.x=PI/2
 		box(weapon,Vector3(0,0,.65),Vector3(.48,.22,.25),Color("58595b"))
 		for side in [-1,1]:box(weapon,Vector3(side*.24,0,.65),Vector3(.08,.27,.30),Color("a28750"))
+
+var grain_texture:NoiseTexture2D
+func actor_grain()->NoiseTexture2D:
+	if grain_texture==null:
+		var noise:=FastNoiseLite.new();noise.seed=37;noise.frequency=.11
+		grain_texture=NoiseTexture2D.new();grain_texture.width=128;grain_texture.height=128;grain_texture.noise=noise
+		var ramp:=Gradient.new();ramp.set_color(0,Color(.48,.43,.36));ramp.set_color(1,Color(.94,.9,.82));grain_texture.color_ramp=ramp
+	return grain_texture

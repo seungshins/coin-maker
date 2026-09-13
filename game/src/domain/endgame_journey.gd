@@ -3,7 +3,7 @@ extends RefCounted
 static func build(source:Dictionary,tier:int,variant:int)->Dictionary:
 	var stage:Dictionary=source.duplicate(true)
 	var count:int=7 if tier>=12 else (5 if tier>=6 else 3)
-	stage.layout_revision=int(source.get("layout_revision",0))+1300+tier
+	stage.layout_revision=int(source.get("layout_revision",0))+1400+tier
 	var theme:int=variant%6
 	stage["journey_theme"]=theme
 	stage.name=str(source.name)+" · "+["화산 능선","굽이진 계곡","초승달 해안","십자 신전","트로이 성곽","해상 잔해"][theme]+" T%d"%tier
@@ -67,3 +67,18 @@ static func route_point(theme:int,t:float)->Vector2:
 		var index:int=mini(int(phase),path.size()-2)
 		return (path[index] as Vector2).lerp(path[index+1],phase-index)
 	return Vector2(600+6000*t,3000+(400*sin(t*PI*3) if theme==5 else 1000*sin(t*TAU)))
+
+static func enemy_position(stage:Dictionary,zone:int,index:int,count:int)->Vector2:
+	var center:=Vector2(stage.centers[zone][0],stage.centers[zone][1])
+	if zone>=stage.centers.size()-1:return center
+	var theme:int=stage.journey_theme
+	if theme==0:
+		var t:float=(zone+(index+.5)/count)/stage.centers.size()
+		return Vector2(3000,3000)+Vector2.from_angle(stage.curve_rotation+stage.curve_total*t)*(2350-1450*t+(index%3-1)*140)
+	# Each unlocked sector owns the road leading INTO it, including its far end.
+	if zone>0:
+		var t:float=(zone-1+(index+.5)/count)/maxi(1,stage.centers.size()-2)
+		var p:=route_point(theme,t)
+		var tangent:Vector2=(route_point(theme,minf(1,t+.001))-route_point(theme,maxf(0,t-.001))).normalized()
+		return p+tangent.orthogonal()*float(index%3-1)*65
+	return center+Vector2.from_angle(index*TAU/count)*Vector2(330,260)

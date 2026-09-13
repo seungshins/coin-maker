@@ -1,9 +1,9 @@
 # Work Status
 ## Current objective
-v0.2.16 completed and published.
+Finish v0.2.17 actor anatomy/joints and C/S enemy distribution.
 ## Completed
-Homing support, dark actor art, dodgeable slam/sweep and Medusa fan/gaze. Summons attack accessible past/current zones, use own attack motion and recover from stuck movement. Future zones excluded from summon splash and fields.
+Longer hero limbs/smaller head, continuous torso/cuirass, elbow/knee chains, hand-bound weapons, throw/sword/hammer motions; satyr horns/hooves, cyclops hair/eye; grain material. Journey enemies cover incoming roads. Layout revision rebuilds old runs while preserving rewards.
 ## Verification
-22 tests passed before summon fix; targeted v0215 summon/save regression passed after fix. Boss renders inspected. Final packages built; Windows smoke exit 0. Five public release assets verified by size/SHA256. macOS/Linux runtime untested.
+22 existing tests passed, new model17 road coverage T1/6/12/16 and joints/grip tests passed. Close-up sword/spear renders inspected. PNG realism is not fully reproduced; these remain procedural models.
 ## Remaining
-None for this iteration. Source pushed; release: https://github.com/seungshins/coin-maker/releases/tag/v0.2.16 . Preserve saves/assets; do not rerun work mutation scripts.
+Build/smoke v17 and publish. Do not rerun model17/rig17/surface17 mutation scripts. Preserve original PNGs and saves.

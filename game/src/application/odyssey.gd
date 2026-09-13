@@ -501,10 +501,8 @@ func start_run() -> void:
 		for i in range(count):
 			var a := float(i) * TAU / count
 			var p: Vector2 = world.centers[zone] + Vector2(cos(a) * 255, sin(a) * 190)
-			if active_stage().get("journey",false) and int(active_stage().journey_theme)==0 and zone<zone_count()-1:
-				var t:float=(zone+(i+.5)/count)/zone_count()
-				var angle:float=active_stage().curve_rotation+active_stage().curve_total*t
-				p=Vector2(3000,3000)+Vector2.from_angle(angle)*(2350-1450*t+(i%3-1)*140)
+			if active_stage().get("journey",false):
+				p=preload("res://src/domain/endgame_journey.gd").enemy_position(active_stage(),zone,i,count)
 			var kind := "archer" if i % (3 if int(profile.stage_id) > 0 else 4) == 2 else "satyr"
 			spawn_enemy(p, zone, kind, (72 + zone * 18) * difficulty().hp, zone * 100 + i)
 		if zone == zone_count() - 1 or zone in active_stage().get("miniboss_zones",[]):
