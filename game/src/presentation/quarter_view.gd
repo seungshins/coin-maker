@@ -163,6 +163,14 @@ func refresh(delta: float) -> void:
 		spirit.position = point(m.p)
 		spirit.scale = Vector3.ONE * 0.75
 		pose(spirit, clock * 9, false)
+		var facing:Vector2=m.get("facing",Vector2.DOWN)
+		spirit.rotation.y=atan2(facing.x,facing.y)
+		if spirit.has_node("Model/Weapon"):
+			var swing:float=sin(clampf(float(m.get("attack_flash",0))/.25,0,1)*PI)
+			spirit.get_node("Model/Weapon").rotation=Vector3(-swing*.5,swing*1.2,0)
+			for side in [-1,1]:
+				var arm=spirit.get_node_or_null("Model/Arm%d"%side)
+				if arm!=null:arm.rotation.x=-swing*.9
 		health_bar("minionhp%d" % i, spirit.position + Vector3(0, 1.3, 0), m.hp / m.max_hp, Color("75dcfa"))
 	for i in range(game.bolts.size()):
 		var bolt: Dictionary = game.bolts[i]

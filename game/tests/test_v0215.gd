@@ -54,6 +54,20 @@ func run()->void:
 		g.profile.items.back().effect=effect
 		check(is_equal_approx(g.rules.skill_spec(g.profile).damage/baseline,1.15),"attribute unique damage scaling")
 	for i in range(60):g.update_bolts(1.0/60)
+
+	g.minions.clear();g.fields.clear();g.enemies.clear();g.profile.cleared=[0]
+	g.spawn_enemy(g.player+Vector2(65,0),0,"satyr",10000,777)
+	var old_enemy:Dictionary=g.enemies[0];old_enemy.hp=10000;old_enemy.affix=""
+	g.spawn_enemy(g.player+Vector2(15,0),2,"satyr",10000,778)
+	var locked:Dictionary=g.enemies[1];locked.hp=10000;locked.affix=""
+	g.battle_extras.summon({"id":"summon","damage":10})
+	for minion in g.minions:minion.p=g.player
+	g.battle_extras.minion_combat.update(.15)
+	var first_hp:float=old_enemy.hp
+	for i in range(12):g.battle_extras.minion_combat.update(.1)
+	check(old_enemy.hp<first_hp and first_hp<10000,"summons keep attacking surviving enemies in completed zones")
+	check(locked.hp==10000,"summons do not target locked future zones")
+	check(g.minions[0].has("facing") and g.minions[0].has("attack_flash"),"minions own facing and attack animation")
 	g.queue_free();await process_frame
 	if failures==0:print("PASS: six links, duplicate sources, summon skills/supports/save, trinity and proc cooldowns")
 	quit(failures)

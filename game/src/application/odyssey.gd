@@ -1040,7 +1040,7 @@ func update_fields(delta: float) -> void:
 		if field.tick <= 0:
 			field.tick += 0.5
 			for e in enemies:
-				if not e.dead and e.p.distance_to(field.p) <= field.radius:
+				if not e.dead and (not field.get("minion",false) or int(e.zone)<=mini(profile.cleared.size(),zone_count()-1)) and e.p.distance_to(field.p) <= field.radius:
 					hit_enemy(e, field.damage, false, battle_extras.element(field.kind), field.get("knockback", 0),not field.get("minion",false))
 					if field.kind in ["blizzard", "ice_zone"]: e.slow_time = 1.0; e.slow = 0.3
 			if field.kind == "thunder": combat_audio.play_effect("thunder")

@@ -16,43 +16,51 @@ func update(delta:float)->void:
 	for i in range(game.minions.size()-1,-1,-1):
 		var m:Dictionary=game.minions[i]
 		m.life-=delta;m.cd=maxf(0,m.cd-delta)
+		m.attack_flash=maxf(0,float(m.get("attack_flash",0))-delta)
 		if m.get("blast",0)>0:m.hp-=m.max_hp*delta/8.0
 		if m.life<=0 or m.hp<=0:
 			if m.get("blast",0)>0:
 				game.effects.append({"kind":"death","element":"fire","p":m.p,"life":.65})
 				game.combat_audio.play_effect("death_fire")
 				for e in game.enemies:
-					if not e.dead and e.p.distance_to(m.p)<140:game.hit_enemy(e,m.damage*m.blast,false,"fire",0,false)
+					if not e.dead and int(e.zone)<=mini(game.profile.cleared.size(),game.zone_count()-1) and e.p.distance_to(m.p)<140:game.hit_enemy(e,m.damage*m.blast,false,"fire",0,false)
 			game.minions.remove_at(i);continue
 		var target:Dictionary={};var nearest:=450.0
 		for e in game.enemies:
-			if e.dead or int(e.zone)!=mini(game.profile.cleared.size(),game.zone_count()-1):continue
+			if e.dead or int(e.zone)>mini(game.profile.cleared.size(),game.zone_count()-1):continue
 			var distance:float=m.p.distance_to(e.p)
 			if distance<nearest:target=e;nearest=distance
 		var range_:float=95 if m.get("type","summon")=="summon" else 290
 		var destination:Vector2=game.player if target.is_empty() else target.p
+		if not target.is_empty():m.facing=(target.p-m.p).normalized()
 		if not target.is_empty() and nearest<=range_ and m.cd<=0:
 			cast(m,target);m.cd=(1.1 if m.get("type","summon")=="hydra_summon" else .9)/float(m.get("speed",1))
-		if m.p.distance_to(destination)>(44 if target.is_empty() else range_*.8):
+		var old_position:Vector2=m.p
+		var should_move:bool=m.p.distance_to(destination)>(44 if target.is_empty() else range_*.8)
+		if should_move:
 			var direction:Vector2=(destination-m.p).normalized()
-			for angle in [0.0,.8,-.8,1.5,-1.5]:
+			for angle in [0.0,.8,-.8,1.5,-1.5,2.2,-2.2]:
 				var step:Vector2=m.p+direction.rotated(angle)*195*delta
 				if game.can_move(step):m.p=step;break
-		if m.p.distance_to(game.player)>600:m.p=game.player
+		m.stuck=float(m.get("stuck",0))+delta if should_move and m.p.distance_to(destination)>=old_position.distance_to(destination)-.1 else 0.0
+		if m.p.distance_to(game.player)>600 or float(m.stuck)>1.2:
+			m.p=game.player;m.stuck=0.0
 func cast(m:Dictionary,target:Dictionary)->void:
+	m.attack_flash=.25
+	m.facing=(target.p-m.p).normalized()
 	var type:String=m.get("type","summon")
 	var targets:Array=[target]
 	if type=="hydra_summon":
 		for e in game.enemies:
 			if targets.size()>=3:break
-			if not e.dead and e!=target and e.p.distance_to(target.p)<160:targets.append(e)
+			if not e.dead and int(e.zone)<=mini(game.profile.cleared.size(),game.zone_count()-1) and e!=target and e.p.distance_to(target.p)<160:targets.append(e)
 	var victims:Dictionary={}
 	for mark in targets:
 		var element:String="ice" if type=="siren_summon" else ("poison" if type=="hydra_summon" else "physical")
 		game.effects.append({"kind":"slash" if type=="summon" else "travel","p":m.p,"to":mark.p,"leap":false,"angle":(mark.p-m.p).angle(),"radius":95,"arc":110,"life":.23})
 		var radius:float=float(m.get("splash",0))
 		for e in game.enemies:
-			if e.dead or victims.has(e.id):continue
+			if e.dead or int(e.zone)>mini(game.profile.cleared.size(),game.zone_count()-1) or victims.has(e.id):continue
 			var hit:bool=e==mark or (radius>0 and e.p.distance_to(mark.p)<=radius)
 			if type=="summon":hit=hit or (e.p.distance_to(m.p)<95 and absf((mark.p-m.p).angle_to(e.p-m.p))<.96)
 			if not hit:continue
