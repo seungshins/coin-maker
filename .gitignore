@@ -12,3 +12,6 @@ game/export_templates/
 game/feature_profiles/
 game/script_templates/
 game/text_editor_themes/
+
+# Portable release artifacts
+dist/

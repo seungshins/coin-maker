@@ -16,7 +16,45 @@ try {
     switch ($Mode) {
         'editor' { & $engine --path $gamePath --editor }
         'play' { & $engine --path $gamePath }
-        'test' { & $engine --headless --path $gamePath --script res://tests/test_combat.gd }
+        'test' {
+            & $engine --headless --path $gamePath --script res://tests/test_combat.gd
+            if ($LASTEXITCODE -ne 0) { throw 'Combat tests failed.' }
+            & $engine --headless --path $gamePath --script res://tests/test_first_playable.gd
+            if ($LASTEXITCODE -ne 0) { throw 'Playable tests failed.' }
+            & $engine --headless --path $gamePath --script res://tests/test_town.gd
+            if ($LASTEXITCODE -ne 0) { throw 'Town tests failed.' }
+            & $engine --headless --path $gamePath --script res://tests/test_todo.gd
+            if ($LASTEXITCODE -ne 0) { throw 'TODO tests failed.' }
+            & $engine --headless --path $gamePath --script res://tests/test_ui_curses.gd
+            if ($LASTEXITCODE -ne 0) { throw 'UI curse tests failed.' }
+            & $engine --headless --path $gamePath --script res://tests/test_loadout.gd
+            if ($LASTEXITCODE -ne 0) { throw 'Loadout tests failed.' }
+            & $engine --headless --path $gamePath --script res://tests/test_v024.gd
+            if ($LASTEXITCODE -ne 0) { throw 'v024 tests failed.' }
+            & $engine --headless --path $gamePath --script res://tests/test_v025.gd
+            if ($LASTEXITCODE -ne 0) { throw 'v025 tests failed.' }
+            & $engine --headless --path $gamePath --script res://tests/test_v026.gd
+            if ($LASTEXITCODE -ne 0) { throw 'v026 tests failed.' }
+            & $engine --headless --path $gamePath --script res://tests/test_v027.gd
+            if ($LASTEXITCODE -ne 0) { throw 'v027 tests failed.' }
+            & $engine --headless --path $gamePath --script res://tests/test_v028.gd
+            if ($LASTEXITCODE -ne 0) { throw 'v028 tests failed.' }
+            & $engine --headless --path $gamePath --script res://tests/test_v0210.gd
+            if ($LASTEXITCODE -ne 0) { throw 'v0210 tests failed.' }
+            & $engine --headless --path $gamePath --script res://tests/test_v0211.gd
+            if ($LASTEXITCODE -ne 0) { throw 'v0211 tests failed.' }
+            & $engine --headless --path $gamePath --script res://tests/test_v0211_progression.gd
+            if ($LASTEXITCODE -ne 0) { throw "Progression tests failed." }
+            & $engine --headless --path $gamePath --script res://tests/test_v0212.gd
+            if ($LASTEXITCODE -ne 0) { throw "Journey tests failed." }
+            & $engine --headless --path $gamePath --script res://tests/test_controls.gd
+            if ($LASTEXITCODE -ne 0) { throw "Controls tests failed." }
+            & $engine --headless --path $gamePath --script res://tests/test_balance100.gd
+            if ($LASTEXITCODE -ne 0) { throw "Balance tests failed." }
+            & $engine --headless --path $gamePath --script res://tests/test_v0213.gd
+            if ($LASTEXITCODE -ne 0) { throw "v0213 tests failed." }
+            & $engine --headless --path $gamePath --script res://tests/test_v0214.gd
+        }
     }
     if ($LASTEXITCODE -ne 0) { throw "Godot exited with code $LASTEXITCODE" }
 } finally {

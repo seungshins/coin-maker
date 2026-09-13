@@ -1,0 +1,696 @@
+{
+  "version": 1,
+  "rarity_names": [
+    "일반",
+    "마법",
+    "희귀",
+    "영웅",
+    "전설",
+    "신화"
+  ],
+  "rarity_weights": [
+    60,
+    27,
+    10,
+    2.5,
+    0.45,
+    0.05
+  ],
+  "skills": {
+    "slash": {
+      "name": "아레스의 참격",
+      "damage": 48,
+      "interval": 0.55,
+      "reach": 126,
+      "arc": 150,
+      "melee": true,
+      "description": "넓게 베기 · 다중 적중 · 공격 중 피해 30% 감소",
+      "mana": 4,
+      "tags": [
+        "primary",
+        "melee",
+        "area"
+      ]
+    },
+    "whirl": {
+      "name": "아킬레우스의 선회",
+      "damage": 30,
+      "interval": 0.3,
+      "reach": 108,
+      "arc": 360,
+      "melee": true,
+      "description": "배치한 키 유지: 이동하며 연속 회전 · 공격 중 받는 피해 감소",
+      "mana": 3,
+      "tags": [
+        "primary",
+        "melee",
+        "area",
+        "channel"
+      ]
+    },
+    "bolt": {
+      "name": "제우스의 벼락",
+      "damage": 35,
+      "interval": 0.46,
+      "reach": 620,
+      "arc": 0,
+      "melee": false,
+      "description": "번개 발사 · 안전한 거리 유지 · 단일 적중",
+      "mana": 6,
+      "base_projectiles": 3,
+      "tags": [
+        "primary",
+        "spell",
+        "projectile"
+      ]
+    },
+    "bow": {
+      "name": "오디세우스의 활",
+      "damage": 34,
+      "interval": 0.4,
+      "reach": 740,
+      "arc": 0,
+      "melee": false,
+      "description": "빠른 화살 연사 · 분열 보조 호환 · 긴 사거리",
+      "mana": 4,
+      "base_projectiles": 3,
+      "tags": [
+        "primary",
+        "attack",
+        "projectile"
+      ]
+    },
+    "thunder": {
+      "name": "제우스의 심판",
+      "damage": 105,
+      "interval": 1.25,
+      "reach": 120,
+      "cast_range": 550,
+      "arc": 360,
+      "melee": false,
+      "area": true,
+      "mana": 20,
+      "description": "마우스 위치에 벼락 · 0.3초 후 범위 피해",
+      "tags": [
+        "primary",
+        "spell",
+        "area"
+      ]
+    },
+    "blizzard": {
+      "name": "보레아스의 눈보라",
+      "damage": 20,
+      "interval": 2.5,
+      "reach": 140,
+      "cast_range": 500,
+      "arc": 360,
+      "melee": false,
+      "area": true,
+      "mana": 24,
+      "description": "마우스 위치에 3초 눈보라 · 0.5초마다 피해 · 이동 30% 감속",
+      "tags": [
+        "primary",
+        "spell",
+        "area"
+      ]
+    },
+    "knives": {
+      "name": "페르세우스의 칼날",
+      "damage": 40,
+      "interval": 0.6,
+      "reach": 560,
+      "arc": 0,
+      "melee": false,
+      "mana": 7,
+      "description": "칼날 투척 · 최대 3명 관통 · 분열 보조 호환",
+      "base_projectiles": 3,
+      "tags": [
+        "primary",
+        "attack",
+        "projectile"
+      ]
+    },
+    "ice_arrow": {
+      "name": "보레아스의 얼음 화살",
+      "damage": 29,
+      "interval": 0.6,
+      "reach": 760,
+      "arc": 0,
+      "melee": false,
+      "mana": 8,
+      "base_projectiles": 3,
+      "arrow": true,
+      "description": "적중 지점에 2초 냉기 지대 · 초당 기본 피해의40% · 30% 감속",
+      "tags": [
+        "primary",
+        "attack",
+        "projectile"
+      ]
+    },
+    "lightning_arrow": {
+      "name": "제우스의 번개 화살",
+      "damage": 32,
+      "interval": 0.6,
+      "reach": 760,
+      "arc": 0,
+      "melee": false,
+      "mana": 8,
+      "base_projectiles": 3,
+      "arrow": true,
+      "description": "적중 시 가까운 적3명에게 차례로 전이 · 전이 피해 65%",
+      "tags": [
+        "primary",
+        "attack",
+        "projectile"
+      ]
+    },
+    "fire_arrow": {
+      "name": "헤파이스토스의 화염 화살",
+      "damage": 78,
+      "interval": 0.8,
+      "reach": 760,
+      "arc": 0,
+      "melee": false,
+      "mana": 8,
+      "base_projectiles": 3,
+      "arrow": true,
+      "description": "강한 단발 피해 · 기본 화살3발",
+      "tags": [
+        "primary",
+        "attack",
+        "projectile"
+      ]
+    },
+    "arrow_rain": {
+      "name": "아르테미스의 화살비",
+      "damage": 26,
+      "interval": 2.4,
+      "reach": 145,
+      "cast_range": 600,
+      "arc": 360,
+      "melee": false,
+      "area": true,
+      "mana": 20,
+      "description": "지정 지역에 2초간 화살비 · 0.5초마다 피해",
+      "tags": [
+        "primary",
+        "attack",
+        "area"
+      ]
+    },
+    "lava_wave": {
+      "name": "헤파이스토스의 용암 파도",
+      "damage": 85,
+      "interval": 1,
+      "reach": 480,
+      "arc": 0,
+      "melee": true,
+      "wave": true,
+      "mana": 12,
+      "description": "땅을 찍어 넓은 용암 파도 전진 · 적 관통 · 근접 방어 적용",
+      "tags": [
+        "primary",
+        "melee",
+        "area"
+      ]
+    },
+    "summon": {
+      "name": "하데스의 망령 전사",
+      "description": "망령 2기를 15초 소환 · 최대 4기 · 독립적으로 적을 추격하고 공격 · 다시 시전하면 오래된 망령 교체",
+      "damage": 24,
+      "interval": 4,
+      "reach": 100,
+      "melee": false,
+      "mana": 24,
+      "summon": true,
+      "tags": [
+        "primary",
+        "spell",
+        "summon"
+      ]
+    },
+    "spear_thrust": {
+      "name": "아테나의 관통창",
+      "description": "긴 사거리의 좁은 찌르기 · 부채 보조로 넓게 휩쓸기",
+      "damage": 65,
+      "interval": 0.65,
+      "reach": 195,
+      "arc": 35,
+      "melee": true,
+      "mana": 5,
+      "tags": [
+        "primary",
+        "melee",
+        "area"
+      ]
+    },
+    "spear_throw": {
+      "name": "아킬레우스의 투창",
+      "description": "빠른 창 투척 · 연쇄 보조로 주변 적에게 전파",
+      "damage": 55,
+      "interval": 0.65,
+      "reach": 850,
+      "arc": 0,
+      "melee": false,
+      "mana": 7,
+      "arrow": true,
+      "base_projectiles": 1,
+      "tags": [
+        "primary",
+        "attack",
+        "projectile"
+      ]
+    },
+    "blade_orbit": {
+      "name": "아레스의 검륜",
+      "description": "4초간 주변을 도는 칼날 · 0.5초마다 피해 · 재시전은 갱신",
+      "damage": 24,
+      "interval": 4,
+      "reach": 140,
+      "arc": 360,
+      "cast_range": 0,
+      "melee": true,
+      "area": true,
+      "follow": true,
+      "duration": 4,
+      "mana": 18,
+      "tags": [
+        "primary",
+        "melee",
+        "area",
+        "duration"
+      ]
+    },
+    "tidal_aura": {
+      "name": "포세이돈의 격류",
+      "description": "3초간 자신을 따라오는 물결 · 주변 지속 피해",
+      "damage": 22,
+      "interval": 3,
+      "reach": 160,
+      "arc": 360,
+      "cast_range": 0,
+      "melee": false,
+      "area": true,
+      "follow": true,
+      "duration": 3,
+      "mana": 20,
+      "tags": [
+        "primary",
+        "spell",
+        "area",
+        "duration"
+      ]
+    },
+    "lightning_spear": {
+      "name": "제우스의 번개 투창",
+      "description": "적중하면 주변 적 셋에게 번개가 연쇄됩니다.",
+      "damage": 50,
+      "interval": 0.65,
+      "reach": 850,
+      "arc": 0,
+      "melee": false,
+      "mana": 9,
+      "arrow": true,
+      "base_projectiles": 1,
+      "tags": [
+        "primary",
+        "attack",
+        "projectile"
+      ]
+    },
+    "fire_spear": {
+      "name": "헤파이스토스의 불꽃 투창",
+      "description": "적중 위치에 불길을 남겨 지속 피해를 줍니다.",
+      "damage": 50,
+      "interval": 0.65,
+      "reach": 850,
+      "arc": 0,
+      "melee": false,
+      "mana": 9,
+      "arrow": true,
+      "base_projectiles": 1,
+      "tags": [
+        "primary",
+        "attack",
+        "projectile"
+      ]
+    },
+    "ice_spear": {
+      "name": "보레아스의 서리 투창",
+      "description": "적중 위치에 냉기 지대를 남겨 적을 늦추고 지속 피해를 줍니다.",
+      "damage": 50,
+      "interval": 0.65,
+      "reach": 850,
+      "arc": 0,
+      "melee": false,
+      "mana": 9,
+      "arrow": true,
+      "base_projectiles": 1,
+      "tags": [
+        "primary",
+        "attack",
+        "projectile"
+      ]
+    },
+    "sword_wave": {
+      "name": "아레스의 검기",
+      "damage": 68,
+      "interval": 1,
+      "reach": 480,
+      "arc": 0,
+      "melee": true,
+      "wave": true,
+      "mana": 10,
+      "description": "초승달 검기를 보내 관통 피해를 주고 적을 밀어냅니다.",
+      "tags": [
+        "primary",
+        "melee",
+        "area"
+      ]
+    }
+  },
+  "supports": {
+    "power": {
+      "name": "집중",
+      "description": "모든 주스킬 피해 증가",
+      "tags": [
+        "support",
+        "primary_only"
+      ]
+    },
+    "area": {
+      "name": "거대화",
+      "description": "근접 및 지면 마법 반경 증가",
+      "tags": [
+        "support",
+        "primary_only"
+      ]
+    },
+    "split": {
+      "name": "분열",
+      "description": "화살·번개·칼날 투사체 증가 (지면 마법 제외)",
+      "tags": [
+        "support",
+        "primary_only"
+      ]
+    },
+    "returning": {
+      "name": "귀환",
+      "description": "투사체가 사거리 끝 또는 적중 후 돌아옴 · 귀환 시 감소 피해로 한 번 더 적중",
+      "tags": [
+        "support",
+        "primary_only"
+      ]
+    },
+    "spell_echo": {
+      "name": "마법 메아리",
+      "description": "주스킬 · 마법 태그 전용 (소환 제외) · 0.22초 뒤 같은 위치에 무료 반복 시전",
+      "tags": [
+        "support",
+        "primary_only"
+      ]
+    },
+    "melee_echo": {
+      "name": "무예의 잔상",
+      "description": "주스킬 · 근접 전용 (정신집중 제외) · 0.22초 뒤 같은 방향으로 무료 반복",
+      "tags": [
+        "support",
+        "primary_only"
+      ]
+    },
+    "pierce": {
+      "name": "꿰뚫는 의지",
+      "description": "주스킬 · 투사체 전용 · 적을 더 관통",
+      "tags": [
+        "support",
+        "primary_only"
+      ]
+    },
+    "impact": {
+      "name": "거인의 충격",
+      "description": "주스킬 전용 · 밀쳐내기 증가 · 보스는 밀쳐지지 않음",
+      "tags": [
+        "support",
+        "primary_only"
+      ]
+    },
+    "fan": {
+      "name": "전장의 부채",
+      "description": "근접 공격 각도 확대 · 피해 10% 감소",
+      "tags": [
+        "support",
+        "primary_only"
+      ]
+    },
+    "chain": {
+      "name": "운명의 연쇄",
+      "description": "투사체 적중 후 근처의 다른 적에게 감소 피해 전파",
+      "tags": [
+        "support",
+        "primary_only"
+      ]
+    },
+    "duration": {
+      "name": "영속의 권능",
+      "description": "지속형 주스킬의 유지 시간 증가",
+      "tags": [
+        "support",
+        "primary_only"
+      ]
+    }
+  },
+  "support_power": [
+    1.15,
+    1.21,
+    1.3,
+    1.4,
+    1.52,
+    1.65
+  ],
+  "support_area": [
+    1.22,
+    1.28,
+    1.38,
+    1.48,
+    1.6,
+    1.72
+  ],
+  "support_split": [
+    2,
+    3,
+    4,
+    6,
+    8,
+    12
+  ],
+  "melee_guard": 0.3,
+  "melee_stagger": 0.28,
+  "gacha_price": 100,
+  "shop_price": 150,
+  "level_cap": 100,
+  "buffs": {
+    "might": {
+      "name": "아레스의 투지",
+      "description": "주스킬 피해 +12%",
+      "value": 0.12
+    },
+    "ward": {
+      "name": "아테나의 수호",
+      "description": "받는 피해 12% 감소",
+      "value": 0.12
+    },
+    "wind": {
+      "name": "헤르메스의 순풍",
+      "description": "이동 속도 +12%",
+      "value": 0.12
+    },
+    "fire": {
+      "name": "헤파이스토스의 불꽃",
+      "description": "명중 피해의 일부를 원소 추가 피해로 제공 · 레벨에 따라 5~12.5% · 최대 2개 버프",
+      "value": 0.1
+    },
+    "ice": {
+      "name": "보레아스의 서리",
+      "description": "명중 피해의 일부를 원소 추가 피해로 제공 · 레벨에 따라 5~12.5% · 최대 2개 버프",
+      "value": 0.1
+    },
+    "lightning": {
+      "name": "제우스의 전류",
+      "description": "명중 피해의 일부를 원소 추가 피해로 제공 · 레벨에 따라 5~12.5% · 최대 2개 버프",
+      "value": 0.1
+    }
+  },
+  "curse": {
+    "name": "하데스의 낙인",
+    "radius": 120,
+    "range": 500,
+    "duration": 5,
+    "cooldown": 7,
+    "damage_multiplier": 1.2
+  },
+  "unique_effects": {
+    "0": {
+      "name": "전쟁의 포식",
+      "description": "처치 시 체력 +3",
+      "value": 3
+    },
+    "1": {
+      "name": "불굴의 청동",
+      "description": "받는 피해 10% 감소",
+      "value": 0.1
+    },
+    "2": {
+      "name": "날개 달린 발걸음",
+      "description": "회피 재사용 대기시간 20% 감소",
+      "value": 0.2
+    }
+  },
+  "curses": {
+    "vulnerability": {
+      "name": "하데스의 낙인",
+      "description": "5초간 받는 피해 +20%",
+      "duration": 5,
+      "mana": 12
+    },
+    "chains": {
+      "name": "크로노스의 사슬",
+      "description": "5초간 이동·공격 행동 속도 30% 감소 (보스 15%)",
+      "duration": 5,
+      "mana": 16
+    },
+    "frailty": {
+      "name": "닉스의 쇠약",
+      "description": "6초간 가하는 피해 25% 감소 (보스 15%)",
+      "duration": 6,
+      "mana": 14
+    }
+  },
+  "support_return": [
+    0.42,
+    0.48,
+    0.58,
+    0.68,
+    0.78,
+    0.88
+  ],
+  "utility": {
+    "move:blink": {
+      "name": "헤르메스의 점멸",
+      "kind": "movement",
+      "mana": 12,
+      "cooldown": 4,
+      "description": "마우스 방향 최대220 거리 점멸 · 벽 너머 착지 가능 · 잠긴 구역 불가"
+    },
+    "move:leap": {
+      "name": "아킬레우스의 도약",
+      "kind": "movement",
+      "mana": 10,
+      "cooldown": 5,
+      "description": "최대200 거리 도약 · 착지 반경100에 피해70 · 잠긴 구역 불가"
+    },
+    "burst:rage": {
+      "name": "아레스의 격노",
+      "kind": "burst",
+      "mana": 14,
+      "cooldown": 12,
+      "duration": 4,
+      "description": "4초간 모든 주스킬 피해35% 증가"
+    },
+    "burst:haste": {
+      "name": "헤르메스의 질주",
+      "kind": "burst",
+      "mana": 10,
+      "cooldown": 10,
+      "duration": 4,
+      "description": "4초간 이동속도40% 증가"
+    },
+    "burst:volley": {
+      "name": "아르테미스의 일제사격",
+      "kind": "burst",
+      "mana": 14,
+      "cooldown": 12,
+      "duration": 4,
+      "description": "4초간 투사체3개 추가 (지면 마법 제외)"
+    }
+  },
+  "support_echo": [
+    0.65,
+    0.68,
+    0.71,
+    0.74,
+    0.78,
+    0.82
+  ],
+  "support_pierce": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "support_impact": [
+    16,
+    20,
+    25,
+    30,
+    36,
+    44
+  ],
+  "support_fan": [
+    90,
+    110,
+    130,
+    150,
+    180,
+    220
+  ],
+  "support_chain": [
+    1,
+    1,
+    2,
+    2,
+    3,
+    4
+  ],
+  "support_duration": [
+    1.15,
+    1.2,
+    1.3,
+    1.4,
+    1.5,
+    1.6
+  ],
+  "progression": {
+    "gem_levels": [
+      1,
+      8,
+      20,
+      40,
+      65,
+      85
+    ],
+    "drop_levels": [
+      1,
+      1,
+      15,
+      30,
+      55,
+      75
+    ],
+    "act_end_levels": [
+      5,
+      9,
+      13,
+      17,
+      21,
+      25,
+      30
+    ],
+    "skill_per_level": 0.018,
+    "attribute_damage": 0.01,
+    "gacha_base": 50,
+    "gacha_level": 8,
+    "gacha_tier": 35
+  }
+}
