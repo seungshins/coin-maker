@@ -1,11 +1,9 @@
 # Work Status
 ## Current objective
-v0.2.14 ready for final packaging and GitHub release.
+v0.2.15 implementation complete. Release target: https://github.com/seungshins/coin-maker/releases/tag/v0.2.15
 ## Completed
-Four simultaneous weapon slots plus body/relic/helmet/gloves/boots/two rings/necklace (12 total). Legacy3/9 migration; skill-specific weapon damage and held model; all equipped weapons protected from sale. Slot properties and uniques; separate stat/equipment cards; distinct icons; targeted weapon gacha shared odds/cost/pity; additive elemental auras max2; growth tuning; deferred display restore; incompatible banners; saved radial cooldown totals.
+Trinity spear; wraith cone slash, siren slowing song, hydra poison; four summon supports; six links at1/5/15/30/60/85; five unique effects/proc cooldowns; gacha-only duplicate shards. Existing12-slot equipment retained. v0.2.14 is published on GitHub.
 ## Verification
-All19 suites passed after four-weapon change; targeted tests include migration, both rings, weapon non-stacking and sale protection, gacha cost/reward, aura damage, display restore and cooldown resume. UI render and release startup verification in progress.
+All20 suites passed. Additional proc/stat scaling and projectile stepping passed. Summon/support render inspected with no errors. Source-specific duplicate rewards, summon persistence, once-only explosion and proc cooldown verified.
 ## Remaining
-Package final source, Windows smoke; commit/push; GitHub Release upload. Auth verified. No remote conflict.
-## Important
-All work scripts through final14.cjs applied, do not rerun. Preserve assets and saves; no raster generation. Mac/Linux hardware untested.
+All platforms packaged with hashes; Windows exported executable startup passed. No remaining implementation tasks. GitHub publication is handled by the release upload. Preserve all saves and images. Mac/Linux hardware untested. All work scripts through release15.cjs applied; never rerun mutation scripts.

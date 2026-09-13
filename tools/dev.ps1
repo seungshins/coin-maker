@@ -54,6 +54,8 @@ try {
             & $engine --headless --path $gamePath --script res://tests/test_v0213.gd
             if ($LASTEXITCODE -ne 0) { throw "v0213 tests failed." }
             & $engine --headless --path $gamePath --script res://tests/test_v0214.gd
+            if ($LASTEXITCODE -ne 0) { throw "v0214 tests failed." }
+            & $engine --headless --path $gamePath --script res://tests/test_v0215.gd
         }
     }
     if ($LASTEXITCODE -ne 0) { throw "Godot exited with code $LASTEXITCODE" }

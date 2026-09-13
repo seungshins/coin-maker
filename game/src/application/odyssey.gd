@@ -21,6 +21,8 @@ var minions: Array[Dictionary] = []
 var stolen_affixes := {}
 var battle_extras = preload("res://src/application/battle_extras.gd").new(self)
 var actions
+var proc_cooldowns:Dictionary={}
+var combat_procs=preload("res://src/application/combat_procs.gd").new(self)
 var visual_weapon:=""
 var cooldown_totals:Dictionary={}
 var ability_cooldowns := {}
@@ -406,9 +408,9 @@ func gacha(kind: int, shards: bool = false, weapon_filter:String="") -> void:
 		next.items.append(item)
 		message = "%s %s 획득" % [rules.data.rarity_names[rarity], item.name]
 	elif kind == 2:
-		message = rules.award_primary(next, rules.data.skills.keys()[rng.randi_range(0, rules.data.skills.size() - 1)], rarity)
+		message = rules.award_primary(next, rules.data.skills.keys()[rng.randi_range(0, rules.data.skills.size() - 1)], rarity,true)
 	else:
-		message = rules.award_gem(next, {"id": rules.data.supports.keys()[rng.randi_range(0, rules.data.supports.size() - 1)], "rarity": rarity})
+		message = rules.award_gem(next, {"id": rules.data.supports.keys()[rng.randi_range(0, rules.data.supports.size() - 1)], "rarity": rarity},true)
 	if commit(next):
 		show_shop()
 		notify(message)
@@ -674,6 +676,8 @@ func attack(spec: Dictionary, repeated: bool = false, target_override: Variant =
 	attack_id += 1
 	if spec.get("summon", false):
 		battle_extras.summon(spec)
+	elif spec.get("trinity",false):
+		combat_procs.trinity(spec)
 	elif spec.get("area", false):
 		var target := player + (cast_target - player).limit_length(float(spec.cast_range))
 		cast_field(target, spec)
@@ -695,7 +699,7 @@ func attack(spec: Dictionary, repeated: bool = false, target_override: Variant =
 			var speed := 900.0 if profile.skill == "bow" or spec.get("arrow", false) else 660.0
 			bolts.append({"p": player, "v": aim.rotated(angle) * speed, "life": spec.reach / speed, "damage": spec.damage, "friendly": true, "attack": attack_id, "arrow": profile.skill in ["bow", "knives"] or spec.get("arrow", false), "skill_id": profile.skill, "chain_count": spec.get("chain_count", 0), "return_multiplier": spec.get("return_multiplier", 0), "returning": false, "knockback": spec.get("knockback", 0), "pierce": (3 if profile.skill == "knives" else 1) + int(spec.get("pierce_bonus", 0)), "hits": []})
 
-func hit_enemy(enemy: Dictionary, damage: float, melee: bool, element: String = "physical", knockback: float = 0.0) -> void:
+func hit_enemy(enemy: Dictionary, damage: float, melee: bool, element: String = "physical", knockback: float = 0.0, allow_proc:bool=true) -> void:
 	if enemy.dead: return
 	var elemental:Dictionary=rules.elemental_bonuses(profile)
 	var bonus:float=0.0
@@ -714,6 +718,7 @@ func hit_enemy(enemy: Dictionary, damage: float, melee: bool, element: String = 
 	shake = maxf(shake, 3.5 if melee else 1.5)
 	effects.append({"kind": "impact", "p": enemy.p + Vector2(0, -25), "life": 0.18})
 	effects.append({"kind": "number", "p": enemy.p, "text": str(int(damage)), "life": 0.55})
+	if allow_proc:combat_procs.on_hit(enemy,damage)
 	if melee and enemy.kind != "boss":
 		enemy.stagger = rules.data.melee_stagger
 		enemy.windup = 0.0
@@ -1030,7 +1035,7 @@ func update_fields(delta: float) -> void:
 			field.tick += 0.5
 			for e in enemies:
 				if not e.dead and e.p.distance_to(field.p) <= field.radius:
-					hit_enemy(e, field.damage, false, battle_extras.element(field.kind), field.get("knockback", 0))
+					hit_enemy(e, field.damage, false, battle_extras.element(field.kind), field.get("knockback", 0),not field.get("minion",false))
 					if field.kind in ["blizzard", "ice_zone"]: e.slow_time = 1.0; e.slow = 0.3
 			if field.kind == "thunder": combat_audio.play_effect("thunder")
 			if field.kind == "thunder": effects.append({"kind": "thunder", "p": field.p, "radius": field.radius, "life": 0.35})

@@ -50,6 +50,12 @@ func _draw() -> void:
 	elif icon_key in ["burst:rage","burst:fury"]:glyph="weapon"
 	elif icon_key=="burst:volley":glyph="split"
 	elif icon_key=="burst:titan":glyph="armor"
+	if icon_key in ["siren_summon","hydra_summon"]:glyph="summon"
+	elif icon_key=="trinity_spear":glyph="spear_thrust"
+	elif icon_key=="minion_guard":glyph="armor"
+	elif icon_key=="minion_haste":glyph="move"
+	elif icon_key=="minion_blast":glyph="burst"
+	elif icon_key=="minion_splash":glyph="area"
 	match glyph:
 
 		"flame":

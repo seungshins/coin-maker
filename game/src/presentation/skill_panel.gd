@@ -59,12 +59,12 @@ func show_panel() -> void:
 	clear.custom_minimum_size.y = 30
 	label(left, "② " + (game.rules.data.skills[selected].name + " · 보조 연결" if primary else "주스킬을 장착한 키에서 보조 연결 가능"))
 	var links: GridContainer = camp.grid(left, 2)
-	for slot in range(4):
+	for slot in range(6):
 		var index := slot
 		var unlocked: bool = primary and slot < game.rules.slots(p)
 		var text := "보조 %d · " % (slot + 1)
 		var tooltip := "주스킬 전용 보조 연결"
-		if not unlocked: text += "Lv.%d" % [1, 5, 15, 30][slot] if primary else "주스킬 전용"
+		if not unlocked: text += "Lv.%d" % [1, 5, 15, 30, 60, 85][slot] if primary else "주스킬 전용"
 		elif slot < p.supports.size():
 			var gem: Dictionary = p.gems[int(p.supports[slot])]
 			text += game.rules.data.supports[gem.id].name

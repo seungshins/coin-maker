@@ -10,7 +10,7 @@ func new_profile() -> Dictionary:
 
 func slots(profile: Dictionary) -> int:
 	var level := int(profile.level)
-	return 1 + int(level >= 5) + int(level >= 15) + int(level >= 30)
+	return 1 + int(level >= 5) + int(level >= 15) + int(level >= 30) + int(level >= 60) + int(level >= 85)
 
 func xp_needed(level: int) -> int:
 	return roundi((100 + 40 * (level-1) + 8 * (level-1)*(level-1))*(1+.035*maxi(0,level-60)))
@@ -60,7 +60,7 @@ func skill_spec(profile: Dictionary) -> Dictionary:
 	spec.interval = maxf(0.1, spec.interval / s.speed)
 	spec.projectiles = int(spec.get("base_projectiles", 1))
 	spec.return_multiplier = 0.0
-	spec.damage *= 1.0 + effect_value(profile,"wrath") + effect_value(profile,"precision")
+	spec.damage *= 1.0 + effect_value(profile,"wrath") + effect_value(profile,"precision") + minf(.3,profile.attributes[0]*effect_value(profile,"strength_damage")) + minf(.3,profile.attributes[2]*effect_value(profile,"intelligence_damage"))
 	spec.damage *= 1.0 + float(data.progression.skill_per_level) * (clampi(int(profile.level),1,100)-1)
 	var rank:int=skill_rank(profile,profile.skill)
 	spec.damage *= (1.0 + 0.08*rank) if rank>=0 else 0.0
@@ -73,6 +73,10 @@ func skill_spec(profile: Dictionary) -> Dictionary:
 		if int(profile.level)<gem_level(rarity):continue
 		if not support_compatible(str(gem.id), str(profile.skill)): continue
 		match gem.id:
+			"minion_guard":spec.minion_hp=data.minion_guard_hp[rarity];spec.minion_dr=data.minion_guard_dr[rarity]
+			"minion_haste":spec.minion_speed=data.minion_haste[rarity]
+			"minion_blast":spec.minion_blast=data.minion_blast[rarity]
+			"minion_splash":spec.minion_splash=data.minion_splash[rarity]
 			"spell_echo", "melee_echo":
 				spec.repeat = true
 				spec.damage *= data.support_echo[rarity]
@@ -118,24 +122,26 @@ func item_roll(rng: RandomNumberGenerator, rarity: int, level: int, weapon_filte
 		var pick:int=rng.randi_range(0,special.size()/2-1)*2
 		names[slot]=special[pick];effect=special[pick+1]
 	elif unique:
-		var variants := [["아레스의 유산", "heal", "포세이돈의 창", "area", "히드라의 송곳니", "double_projectiles", "아레스의 전쟁창", "wrath"], ["아킬레우스의 갑주", "guard", "보레아스의 외투", "frost", "아틀라스의 어깨", "giant"], ["헤르메스의 날개", "dodge", "아테나의 부엉이", "mana_regen", "프로테우스의 사슬", "headhunter"]]
-		var choice := rng.randi_range(0, (3 if slot == 0 else 2) if rarity >= 4 else 1) * 2
+		var variants := [["아레스의 유산", "heal", "포세이돈의 창", "area", "히드라의 송곳니", "double_projectiles", "아레스의 전쟁창", "wrath", "헤라클레스의 맹세", "strength_damage", "헤카테의 지혜", "intelligence_damage", "하데스의 심판", "curse_hit", "포세이돈의 진동", "shockwave_hit"], ["아킬레우스의 갑주", "guard", "보레아스의 외투", "frost", "아틀라스의 어깨", "giant", "티케의 변덕", "random_boon"], ["헤르메스의 날개", "dodge", "아테나의 부엉이", "mana_regen", "프로테우스의 사슬", "headhunter"]]
+		var choice := rng.randi_range(0, (variants[slot].size()/2-1) if rarity >= 4 else 1) * 2
 		names[slot] = variants[slot][choice]
 		effect = variants[slot][choice + 1]
 	return {"name": names[slot], "weapon_type":weapon_type, "slot": slot, "rarity": rarity, "value": (3 + rarity * 3 + int(ceil(level*.5)) + rng.randi_range(0, 3)) * (3 if slot == 1 else 1), "unique": unique, "effect": effect}
 
-func award_gem(profile: Dictionary, gem: Dictionary) -> String:
+func award_gem(profile: Dictionary, gem: Dictionary, from_gacha:bool=false) -> String:
 	for owned in profile.gems:
 		if owned.id == gem.id and owned.rarity == gem.rarity:
+			if not from_gacha:return "이미 보유한 젬 · 필드 중복은 조각으로 환원되지 않습니다."
 			profile.shards += int(gem.rarity) + 1
 			return "중복 젬 → 조각 +%d" % (int(gem.rarity) + 1)
 	profile.gems.append(gem)
 	return "%s %s 획득" % [data.rarity_names[int(gem.rarity)], data.supports[gem.id].name]
 
-func award_primary(profile:Dictionary,id:String,rarity:int)->String:
+func award_primary(profile:Dictionary,id:String,rarity:int,from_gacha:bool=false)->String:
 	preload("res://src/domain/storage_rules.gd").ensure(profile)
 	var owned:Array=profile.skill_versions.get(id,[])
 	if rarity in owned:
+		if not from_gacha:return "이미 보유한 주스킬 · 필드 중복은 조각으로 환원되지 않습니다."
 		profile.shards+=rarity+1
 		return "중복 주스킬 → 조각 +%d"%(rarity+1)
 	owned.append(rarity);owned.sort()
@@ -199,6 +205,10 @@ func campaign_xp(profile:Dictionary,zone:int,zones:int)->int:
 func support_numbers(gem: Dictionary) -> String:
 	var rarity := int(gem.rarity)
 	match gem.id:
+		"minion_guard":return "소환수 체력 +%d%% · 받는 피해 -%d%%"%[roundi((data.minion_guard_hp[rarity]-1)*100),roundi(data.minion_guard_dr[rarity]*100)]
+		"minion_haste":return "소환수 공격·시전 속도 +%d%%"%roundi((data.minion_haste[rarity]-1)*100)
+		"minion_blast":return "8초간 초당 최대 체력12.5%% 소모 · 사망/만료 시 반경140, 소환 공격 피해 ×%.1f 폭발"%data.minion_blast[rarity]
+		"minion_splash":return "소환 공격 범위 반경%d · 피해 ×0.75"%data.minion_splash[rarity]
 		"spell_echo", "melee_echo": return "2회 반복 · 각 피해 %d%% · 추가 마나 없음" % roundi(data.support_echo[rarity] * 100)
 		"pierce": return "추가 관통 +%d" % data.support_pierce[rarity]
 		"impact": return "밀쳐내기 거리 +%d" % data.support_impact[rarity]
@@ -238,7 +248,7 @@ func item_effect(item: Dictionary) -> String:
 	return str(item.get("effect", (["heal", "guard", "dodge"][int(item.slot)] if int(item.slot)<3 else "")))
 
 func effect_value(profile: Dictionary, effect: String) -> float:
-	var values := {"insight":.1,"gauntlet_impact":12.0,"precision":.08,"heal": 3.0, "guard": 0.10, "dodge": 0.20, "area": 0.25, "frost": 0.25, "mana_regen": 0.40, "double_projectiles": 1.0, "giant": 0.35, "headhunter": 12.0}
+	var values := {"curse_hit":.12,"shockwave_hit":.1,"random_boon":.08,"strength_damage":.0015,"intelligence_damage":.0015,"insight":.1,"gauntlet_impact":12.0,"precision":.08,"heal": 3.0, "guard": 0.10, "dodge": 0.20, "area": 0.25, "frost": 0.25, "mana_regen": 0.40, "double_projectiles": 1.0, "giant": 0.35, "headhunter": 12.0}
 	for index in profile.equipment:
 		if int(index) >= 0 and int(index) < profile.items.size() and item_effect(profile.items[int(index)]) == effect:
 			if effect=="wrath":return 0.9 if int(profile.items[int(index)].rarity)==5 else 0.6
@@ -247,7 +257,7 @@ func effect_value(profile: Dictionary, effect: String) -> float:
 
 func effect_description(item: Dictionary) -> String:
 	if item_effect(item)=="wrath":return "모든 주스킬 피해 +%d%%" % (90 if int(item.get("rarity",4))==5 else 60)
-	return {"insight":"지면 주문 반경 +10%", "gauntlet_impact":"주스킬 밀치기 +12 · 보스 제외", "precision":"주스킬 피해 +8%", "heal": "처치 시 체력 +3", "guard": "받는 피해 -10%", "dodge": "회피 쿨다운 -20%", "area": "근접·지면 마법 반경 +25%", "frost": "피격 시 주변 150 범위 적 2초간 25% 감속", "mana_regen": "마나 재생 +40%", "double_projectiles": "투사체 수 2배 · 같은 시전은 적 하나에 1회 적중", "giant": "몸집 +35% · 근접 반경 +30% · 충돌 크기는 유지", "headhunter": "희귀·보스 몬스터 처치 시 해당 권능 12초 탈취 · 최대 3종 · 중첩 대신 갱신"}.get(item_effect(item), "기본 속성 장비")
+	return {"curse_hit":"명중 시12%로3초 피해 증폭 저주 · 재사용2초", "shockwave_hit":"명중 시10%로 반경110 충격파 · 타격35% 피해 · 재사용1.5초 · 연쇄 발동 없음", "random_boon":"명중 시8%로3초 무작위 격노/가속/다중투사체 · 재사용8초", "strength_damage":"배분한 힘1당 피해+0.15% · 최대30%", "intelligence_damage":"배분한 지능1당 피해+0.15% · 최대30%", "insight":"지면 주문 반경 +10%", "gauntlet_impact":"주스킬 밀치기 +12 · 보스 제외", "precision":"주스킬 피해 +8%", "heal": "처치 시 체력 +3", "guard": "받는 피해 -10%", "dodge": "회피 쿨다운 -20%", "area": "근접·지면 마법 반경 +25%", "frost": "피격 시 주변 150 범위 적 2초간 25% 감속", "mana_regen": "마나 재생 +40%", "double_projectiles": "투사체 수 2배 · 같은 시전은 적 하나에 1회 적중", "giant": "몸집 +35% · 근접 반경 +30% · 충돌 크기는 유지", "headhunter": "희귀·보스 몬스터 처치 시 해당 권능 12초 탈취 · 최대 3종 · 중첩 대신 갱신"}.get(item_effect(item), "기본 속성 장비")
 
 func ability_info(id: String) -> Dictionary:
 	if data.skills.has(id): return data.skills[id]
@@ -263,6 +273,7 @@ func support_compatible(gem_id: String, skill_id: String) -> bool:
 	var tags: Array = data.skills[skill_id].get("tags", [])
 	if "primary" not in tags: return false
 	match gem_id:
+		"minion_guard","minion_haste","minion_blast","minion_splash":return "summon" in tags
 		"fan": return "melee" in tags and not "duration" in tags
 		"chain": return "projectile" in tags
 		"duration": return "duration" in tags

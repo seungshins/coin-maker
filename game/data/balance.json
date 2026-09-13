@@ -216,7 +216,7 @@
     },
     "summon": {
       "name": "하데스의 망령 전사",
-      "description": "망령 2기를 15초 소환 · 최대 4기 · 독립적으로 적을 추격하고 공격 · 다시 시전하면 오래된 망령 교체",
+      "description": "망령 2기 · 15초 · 최대 소환수 4기 · 부채꼴 영혼 베기",
       "damage": 24,
       "interval": 4,
       "reach": 100,
@@ -226,8 +226,10 @@
       "tags": [
         "primary",
         "spell",
-        "summon"
-      ]
+        "summon",
+        "duration"
+      ],
+      "duration": 15
     },
     "spear_thrust": {
       "name": "아테나의 관통창",
@@ -367,6 +369,56 @@
         "melee",
         "area"
       ]
+    },
+    "siren_summon": {
+      "name": "세이렌의 노래",
+      "description": "세이렌 1기 · 감속 음파와 냉기 타격 · 15초",
+      "damage": 36,
+      "interval": 4,
+      "reach": 100,
+      "melee": false,
+      "mana": 28,
+      "summon": true,
+      "tags": [
+        "primary",
+        "spell",
+        "summon",
+        "duration"
+      ],
+      "duration": 15
+    },
+    "hydra_summon": {
+      "name": "레르네의 히드라",
+      "description": "히드라 1기 · 세 적에게 독 타격과 독 지대 · 15초",
+      "damage": 24,
+      "interval": 4,
+      "reach": 100,
+      "melee": false,
+      "mana": 28,
+      "summon": true,
+      "tags": [
+        "primary",
+        "spell",
+        "summon",
+        "duration"
+      ],
+      "duration": 15
+    },
+    "trinity_spear": {
+      "name": "삼신의 분광창",
+      "description": "창 찌르기 뒤 전방 3방향으로 화염·냉기·번개 줄기 · 줄기 각각 기본 피해45%",
+      "damage": 54,
+      "interval": 1.05,
+      "reach": 195,
+      "arc": 35,
+      "melee": true,
+      "mana": 16,
+      "tags": [
+        "primary",
+        "melee",
+        "area"
+      ],
+      "trinity": true
     }
   },
   "supports": {
@@ -457,6 +509,22 @@
         "support",
         "primary_only"
       ]
+    },
+    "minion_guard": {
+      "name": "불멸의 계약",
+      "description": "소환수 최대 체력과 피해 감소 증가"
+    },
+    "minion_haste": {
+      "name": "영혼의 박동",
+      "description": "소환수 공격·시전 속도 증가"
+    },
+    "minion_blast": {
+      "name": "종말의 서약",
+      "description": "소환수 8초 지속 · 생명력 소모 · 사망 또는 만료 시 폭발"
+    },
+    "minion_splash": {
+      "name": "공명의 합창",
+      "description": "소환수 공격이 범위 피해로 전환 · 타격 피해25% 감소"
     }
   },
   "support_power": [
@@ -692,5 +760,45 @@
     "gacha_base": 50,
     "gacha_level": 8,
     "gacha_tier": 35
-  }
+  },
+  "minion_guard_hp": [
+    1.3,
+    1.45,
+    1.6,
+    1.8,
+    2.05,
+    2.3
+  ],
+  "minion_guard_dr": [
+    0.08,
+    0.1,
+    0.13,
+    0.16,
+    0.19,
+    0.22
+  ],
+  "minion_haste": [
+    1.1,
+    1.16,
+    1.23,
+    1.31,
+    1.4,
+    1.5
+  ],
+  "minion_blast": [
+    1.2,
+    1.4,
+    1.6,
+    1.9,
+    2.2,
+    2.5
+  ],
+  "minion_splash": [
+    45,
+    55,
+    65,
+    75,
+    90,
+    105
+  ]
 }

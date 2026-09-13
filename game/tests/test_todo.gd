@@ -17,7 +17,7 @@ func run() -> void:
 	store.path = "user://test_todo.json"
 	check(store.save_profile(p) and store.load_profile().level == 11, "level 11 saves")
 	rules.add_xp(p, 100000000)
-	check(p.level == 100 and p.xp == 0 and rules.slots(p) == 4, "level cap 100 and final support slots")
+	check(p.level == 100 and p.xp == 0 and rules.slots(p) == 6, "level cap 100 and final support slots")
 	var chars := Characters.new()
 	chars.directory = "user://test_todo_characters"
 	chars.legacy = "user://test_todo_legacy.json"

@@ -479,7 +479,7 @@ func show_codex()->void:
 			cell.tooltip_text=str(game.rules.data.supports[id].name)+"\n"+str(game.rules.data.supports[id].description)
 			for rarity in range(6):cell.tooltip_text+="\n"+game.rules.data.rarity_names[rarity]+" · "+game.rules.support_numbers({"id":id,"rarity":rarity})
 	else:
-		var names:Dictionary={"insight":"아테나의 통찰","gauntlet_impact":"헤라클레스의 주먹","precision":"아르테미스의 손길","wrath":"아레스의 전쟁창","heal":"아레스의 유산","area":"포세이돈의 창","double_projectiles":"히드라의 송곳니","guard":"아킬레우스의 갑주","frost":"보레아스의 외투","giant":"아틀라스의 어깨","dodge":"헤르메스의 날개","mana_regen":"아테나의 부엉이","headhunter":"프로테우스의 사슬"}
+		var names:Dictionary={"curse_hit":"하데스의 심판","shockwave_hit":"포세이돈의 진동","random_boon":"티케의 변덕","strength_damage":"헤라클레스의 맹세","intelligence_damage":"헤카테의 지혜","insight":"아테나의 통찰","gauntlet_impact":"헤라클레스의 주먹","precision":"아르테미스의 손길","wrath":"아레스의 전쟁창","heal":"아레스의 유산","area":"포세이돈의 창","double_projectiles":"히드라의 송곳니","guard":"아킬레우스의 갑주","frost":"보레아스의 외투","giant":"아틀라스의 어깨","dodge":"헤르메스의 날개","mana_regen":"아테나의 부엉이","headhunter":"프로테우스의 사슬"}
 		for effect in names:
 			var cell:=card(cells,str(names[effect]),Color("df9c52"),func():pass)
 			cell.tooltip_text=str(names[effect])+" · "+("보유" if game.profile.items.any(func(i):return game.rules.item_effect(i)==effect) else "미획득")+"\n"+game.rules.effect_description({"unique":true,"effect":effect,"slot":0})+"\n장비 가차 / 몬스터 전리품"

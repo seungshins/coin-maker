@@ -154,7 +154,7 @@ func refresh(delta: float) -> void:
 		if float(e.get("curse", 0)) > 0 or float(e.get("chains", 0)) > 0 or float(e.get("frailty", 0)) > 0: ring("curse%d" % e.id, point(e.p, 0.07), 0.38, Color("ba93ff"))
 	for i in range(game.minions.size()):
 		var m: Dictionary = game.minions[i]
-		var spirit := actor("minion%d" % i, Color("69c8d4"), false)
+		var spirit := actor("minion%d_%s" % [i,m.get("type","summon")], Color("69c8d4"), false,{"siren_summon":"harpy","hydra_summon":"hydra"}.get(str(m.get("type","summon")),"hoplite"))
 		spirit.position = point(m.p)
 		spirit.scale = Vector3.ONE * 0.75
 		pose(spirit, clock * 9, false)
@@ -214,6 +214,9 @@ func refresh(delta: float) -> void:
 				blade_node.visible=true
 				blade_node.position=point(blade_p,.6)
 				blade_node.rotation=Vector3(PI/2,-angle,0)
+			continue
+		if field.kind=="venom":
+			for bubble in range(5):elements.draw("venom%d-%d"%[i,bubble],point(field.p+Vector2.from_angle(bubble*2.4)*field.radius*.6,.25),"poison",Vector2(.6,.45))
 			continue
 		if field.kind=="fire_zone":
 			for flame in range(7):elements.draw("burn%d-%d"%[i,flame],point(field.p+Vector2.from_angle(flame*2.4)*field.radius*.6,.4),"fire",Vector2(.55,.9))
@@ -282,7 +285,7 @@ func actor(key: String, color: Color, boss: bool, model: String = "") -> Node3D:
 	var node := Node3D.new()
 	add_child(node)
 	actors[key] = node
-	if key == "hero" or key.begins_with("enemy"):
+	if key == "hero" or key.begins_with("enemy") or key.begins_with("minion"):
 		models.build(node, "hero" if key == "hero" else (model if not model.is_empty() else ("cyclops" if boss else "satyr")))
 		return node
 	box(node, Vector3(0, 0.77, 0), Vector3(0.46, 0.5, 0.28), color)

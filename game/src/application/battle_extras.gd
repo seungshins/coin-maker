@@ -1,9 +1,13 @@
 extends RefCounted
 const Math = preload("res://src/domain/combat_math.gd")
+var minion_combat
 var game
-func _init(owner_game) -> void: game = owner_game
+func _init(owner_game) -> void:
+	game = owner_game
+	minion_combat=preload("res://src/application/minion_combat.gd").new(game)
 
 func element(id: String) -> String:
+	if id=="venom":return "poison"
 	if id=="tidal_aura": return "water"
 	if id in ["fire_arrow", "lava_wave","fire_spear","fire_zone"]: return "fire"
 	if id in ["ice_arrow", "blizzard", "ice_zone","ice_spear"]: return "ice"
@@ -26,40 +30,10 @@ func update(delta: float) -> void:
 		game.attack(entry.spec, true, entry.target)
 		game.profile.skill = previous
 		game.aim = old_aim
-	for i in range(game.minions.size() - 1, -1, -1):
-		var m: Dictionary = game.minions[i]
-		m.life -= delta
-		m.cd = maxf(0, m.cd - delta)
-		if m.life <= 0 or m.hp <= 0: game.minions.remove_at(i); continue
-		var target: Dictionary = {}
-		var nearest := 420.0
-		for e in game.enemies:
-			if e.dead or e.zone != mini(game.profile.cleared.size(), game.zone_count() - 1): continue
-			var distance: float = m.p.distance_to(e.p)
-			if distance < nearest: target = e; nearest = distance
-		var destination: Vector2 = game.player
-		if not target.is_empty():
-			destination = target.p
-			if nearest < 65 and m.cd <= 0:
-				m.cd = 0.8
-				game.effects.append({"kind": "chain", "p": m.p, "to": target.p, "life": 0.18})
-				game.hit_enemy(target, m.damage, false, "physical", m.get("knockback", 0))
-		if m.p.distance_to(destination) > 44:
-			var direction: Vector2 = (destination - m.p).normalized()
-			for angle in [0.0, 0.8, -0.8, 1.5, -1.5]:
-				var step: Vector2 = m.p + direction.rotated(angle) * 195 * delta
-				if game.can_move(step): m.p = step; break
-		if m.p.distance_to(game.player) > 600: m.p = game.player
+	for id in game.proc_cooldowns:game.proc_cooldowns[id]=maxf(0,game.proc_cooldowns[id]-delta)
+	minion_combat.update(delta)
 
-func summon(spec: Dictionary) -> void:
-	for i in range(2):
-		if game.minions.size() >= 4: game.minions.pop_front()
-		var p: Vector2 = game.player + Vector2(-28 if i == 0 else 28, 25)
-		if not game.can_move(p): p = game.player
-		var hp: float = game.rules.stats(game.profile).hp * 0.65
-		game.minions.append({"p": p, "hp": hp, "max_hp": hp, "damage": spec.damage, "knockback": spec.get("knockback", 0), "life": 15.0, "cd": 0.1})
-		game.effects.append({"kind": "curse", "p": p, "radius": 35, "life": 0.5})
-	game.combat_audio.play_effect("curse")
+func summon(spec:Dictionary)->void:minion_combat.summon(spec)
 
 func enemy_focus(e: Dictionary) -> Vector2:
 	var focus: Vector2 = game.player
@@ -74,7 +48,7 @@ func enemy_strike(e: Dictionary, damage: float) -> void:
 	var radius := 115.0 if e.kind == "boss" else 58.0
 	if game.player.distance_to(e.target) < radius: game.hurt(damage)
 	for m in game.minions:
-		if m.p.distance_to(e.target) < radius: m.hp -= damage
+		if m.p.distance_to(e.target) < radius: m.hp -= damage*(1.0-float(m.get("dr",0)))
 
 func intercept(from: Vector2, to: Vector2, damage: float) -> bool:
 	for m in game.minions:

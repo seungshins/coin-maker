@@ -10,6 +10,8 @@ func material(element:String)->ShaderMaterial:
 		common+="float wobble=0.035*sin(UV.y*22.-TIME*9.)+0.02*sin(UV.y*41.+TIME*13.); float w=0.035+0.35*UV.y; a=(1.-smoothstep(w-0.12,w,abs(p.x+wobble)))*(1.-smoothstep(0.83,1.,UV.y)); c=mix(vec3(1.,0.11,0.005),vec3(1.,0.92,0.22),clamp(1.-abs(p.x)/max(w,0.01),0.,1.));"
 	elif element=="water":
 		common+="float r=length(p); float wave=0.3+0.055*sin(atan(p.y,p.x)*7.-TIME*5.); a=(1.-smoothstep(0.015,0.08,abs(r-wave)))*0.8; c=vec3(0.12,0.65,0.92);"
+	elif element=="poison":
+		common+="float r=length(p); a=(1.-smoothstep(.1,.49,r))*(.55+.25*sin(UV.x*25.+UV.y*19.+TIME*4.)); c=vec3(.36,.86,.12);"
 	elif element=="ice":
 		common+="float r=length(p); float angle=atan(p.y,p.x); float ray=pow(abs(cos(angle*3.)),18.); a=(ray*0.8+0.15)*(1.-smoothstep(0.32,0.48,r)); c=vec3(0.35,0.82,1.);"
 	else:
