@@ -9,9 +9,9 @@ func build(parent: Node3D, kind: String) -> void:
 		return
 	parent.set_meta("model_kind",kind)
 	var bronze := Color("796345")
-	var skin := Color("997b65")
+	var skin:Color = {"satyr":Color("643d39"),"minotaur":Color("513331"),"cyclops":Color("6c6356"),"harpy":Color("5b415d"),"gorgon":Color("29493b"),"hydra":Color("304e36")}.get(kind,Color("75634e"))
 	if kind in ["talos","automaton"]: skin = bronze
-	if kind in ["gorgon","hydra"]: skin = Color("678862")
+	if kind in ["gorgon","hydra"]: skin = Color("304d39")
 	var body := Node3D.new()
 	body.name = "Model"
 	body.scale = Vector3.ONE*.8
@@ -23,7 +23,7 @@ func build(parent: Node3D, kind: String) -> void:
 	skirt.bottom_radius=.33
 	skirt.height=.3
 	skirt.radial_segments=10
-	view.mesh(body,skirt,Vector3(0,.4,0),Color("49352f"))
+	var skirt_node:MeshInstance3D=view.mesh(body,skirt,Vector3(0,.4,0),Color("302421"));skirt_node.visible=kind!="gorgon"
 	for side in [-1,1]:
 		var leg := Node3D.new()
 		leg.name = "LeftLeg" if side<0 else "RightLeg"
@@ -31,8 +31,9 @@ func build(parent: Node3D, kind: String) -> void:
 		body.add_child(leg)
 		segment(leg,Vector3(0,-.21,0),.09,.39,skin)
 		view.box(leg,Vector3(0,-.4,.08),Vector3(.17,.12,.26),Color("493e30"))
-		segment(body,Vector3(side*.29,.88,0),.14,.2,bronze)
-		segment(body,Vector3(side*.36,.71,0),.08,.35,skin)
+		var arm:=Node3D.new();arm.name="Arm%d"%side;arm.position=Vector3(side*.29,.88,0);body.add_child(arm)
+		segment(arm,Vector3.ZERO,.14,.2,bronze)
+		segment(arm,Vector3(side*.07,-.17,0),.08,.35,skin)
 	var head:=SphereMesh.new()
 	head.radius=.19
 	head.height=.4
@@ -92,6 +93,18 @@ func build(parent: Node3D, kind: String) -> void:
 	if kind=="cyclops":
 		detail.ellipsoid(body,Vector3(0,1.16,.15),Vector3(.13,.065,.08),skin.darkened(.25))
 		view.box(body,Vector3(0,1.30,.19),Vector3(.17,.035,.035),skin.darkened(.3))
+
+	if kind=="gorgon":
+		body.get_node("LeftLeg").visible=false;body.get_node("RightLeg").visible=false
+		for i in range(5):
+			var coil:=TorusMesh.new();coil.inner_radius=.10;coil.outer_radius=.34-i*.03
+			view.mesh(body,coil,Vector3(sin(i*.8)*.10,.10+i*.075,0),skin)
+		for i in range(5):
+			for side in [-1,1]:view.box(body,Vector3((i-2)*.14+side*.022,1.69+(i%2)*.15,.13),Vector3(.014,.014,.014),Color("e8c65f"))
+	if kind in ["satyr","minotaur","cyclops"]:
+		for side in [-1,1]:
+			var tooth:=CylinderMesh.new();tooth.top_radius=.035;tooth.bottom_radius=0;tooth.height=.12
+			view.mesh(body,tooth,Vector3(side*.08,1.13,.19),Color("b7a483"))
 	var weapon:=Node3D.new()
 	weapon.name="Weapon"
 	body.add_child(weapon)
@@ -104,6 +117,10 @@ func build(parent: Node3D, kind: String) -> void:
 	var sword:MeshInstance3D=view.mesh(weapon,blade,Vector3(.4,.68,.52),Color("d7d3bd"))
 	sword.rotation.x=PI/2
 	view.box(weapon,Vector3(.4,.68,.22),Vector3(.23,.045,.06),bronze)
+	var grip:=Vector3(.4,.68,.2)
+	for part in weapon.get_children():part.position-=grip
+	weapon.position=grip
+	weapon.set_meta("rest",grip)
 
 func segment(parent:Node3D,p:Vector3,radius:float,height:float,color:Color)->void:
 	var shape:=CapsuleMesh.new()

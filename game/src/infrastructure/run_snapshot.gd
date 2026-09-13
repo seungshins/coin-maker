@@ -1,5 +1,5 @@
 extends RefCounted
-const FIELDS = ["proc_cooldowns","chests","player", "aim", "health", "enemies", "bolts", "effects", "drops", "rocks", "clock", "cooldown", "guard", "attack_flash", "hurt_time", "dodge", "dodge_cd", "dodge_dir", "potions", "potion_cd", "attack_id", "curse_cd", "mana", "mana_potions", "mana_potion_cd", "fields", "ability_cooldowns", "cooldown_totals", "burst_timers", "pending_repeats", "minions", "stolen_affixes", "ambience", "potion_progress", "mana_potion_progress", "hp_recovery", "mp_recovery", "hp_recovery_rate", "mp_recovery_rate"]
+const FIELDS = ["petrify_time","proc_cooldowns","chests","player", "aim", "health", "enemies", "bolts", "effects", "drops", "rocks", "clock", "cooldown", "guard", "attack_flash", "hurt_time", "dodge", "dodge_cd", "dodge_dir", "potions", "potion_cd", "attack_id", "curse_cd", "mana", "mana_potions", "mana_potion_cd", "fields", "ability_cooldowns", "cooldown_totals", "burst_timers", "pending_repeats", "minions", "stolen_affixes", "ambience", "potion_progress", "mana_potion_progress", "hp_recovery", "mp_recovery", "hp_recovery_rate", "mp_recovery_rate"]
 
 static func encode(value: Variant) -> Variant:
 	if value is Vector2: return {"vector2": [value.x, value.y]}

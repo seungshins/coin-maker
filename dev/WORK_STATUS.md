@@ -1,9 +1,9 @@
 # Work Status
 ## Current objective
-v0.2.15 implementation complete. Release target: https://github.com/seungshins/coin-maker/releases/tag/v0.2.15
+Finalize v0.2.16 homing and dark boss combat, then publish.
 ## Completed
-Trinity spear; wraith cone slash, siren slowing song, hydra poison; four summon supports; six links at1/5/15/30/60/85; five unique effects/proc cooldowns; gacha-only duplicate shards. Existing12-slot equipment retained. v0.2.14 is published on GitHub.
+Homing support verified. Dark actor palettes/character-only rim lighting; Medusa serpent silhouette/staff; larger melee boss weapon and articulated windup/recovery. Locked-target slam, forward sweep, Medusa fan and slowing gaze with telegraphs. Old boss state defaults handled.
 ## Verification
-All20 suites passed. Additional proc/stat scaling and projectile stepping passed. Summon/support render inspected with no errors. Source-specific duplicate rewards, summon persistence, once-only explosion and proc cooldown verified.
+Homing/loadout and boss pattern dodge/save tests passed. First dark renders inspected. Full22 suite and final weapon render pending.
 ## Remaining
-All platforms packaged with hashes; Windows exported executable startup passed. No remaining implementation tasks. GitHub publication is handled by the release upload. Preserve all saves and images. Mac/Linux hardware untested. All work scripts through release15.cjs applied; never rerun mutation scripts.
+Final tests/render; rebuild all (older dist16 lacks boss changes), Windows smoke; commit/push and release16. v15 is already public with five verified assets. All work scripts through boss_finish16.cjs applied; never rerun. Preserve saves/assets.

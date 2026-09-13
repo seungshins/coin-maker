@@ -35,6 +35,8 @@ func _ready() -> void:
 	sun.light_energy = 0.52
 	sun.shadow_enabled = true
 	add_child(sun)
+	var rim:=DirectionalLight3D.new()
+	rim.rotation_degrees=Vector3(-30,145,0);rim.light_color=Color("739cc7");rim.light_energy=.65;rim.light_cull_mask=2;add_child(rim)
 	var world_env := WorldEnvironment.new()
 	environment = Environment.new()
 	environment.background_mode = Environment.BG_COLOR
@@ -86,9 +88,9 @@ func refresh(delta: float) -> void:
 	if lighting != lighting_state:
 		lighting_state=lighting
 		sun.light_color=[Color("a5bada"),Color("ffc48c"),Color("e3e4d6")][lighting]
-		sun.light_energy=[.3,.65,.85][lighting]
+		sun.light_energy=[.42,.78,.9][lighting]
 		sun.rotation_degrees.x=[-55,-22,-60][lighting]
-		environment.ambient_light_energy=[.22,.29,.36][lighting]
+		environment.ambient_light_energy=[.12,.17,.22][lighting]
 		environment.background_color=[Color("111923"),Color("302526"),Color("39454d")][lighting]
 	var current: String = "town" if town else str(game.active_stage().name)
 	if current != layout:
@@ -141,16 +143,19 @@ func refresh(delta: float) -> void:
 		enemy.rotation.y = atan2(game.player.x - e.p.x, game.player.y - e.p.y)
 		enemy.scale = Vector3.ONE * (1.75 if e.kind == "boss" else (1.2 if e.get("elite", false) else 1.0))
 		pose(enemy, clock * 8 + e.id, false)
+		if e.kind=="boss":boss_pose(enemy,e)
 		if enemy.has_node("Art"): enemy.get_node("Art").modulate = Color(1.45, 1.2, 1.1) if e.hit > 0 else Color.WHITE
 		if e.dead:
 			enemy.scale.y *= maxf(0.05, e.death_time / 0.8)
 			continue
 		health_bar("boss%d" % e.id if e.kind == "boss" else "hp%d" % e.id, enemy.position + Vector3(0, 1.30 * enemy.scale.x, 0), e.hp / e.max_hp, Color("ffcf65") if e.get("elite", false) else Color("ff7969"))
-		if e.kind=="boss":text3d("boss_name%d"%e.id,("중간 보스" if e.get("miniboss",false) else "최종 보스")+" · "+game.battle_extras.affix_name(e.get("affix","")),point(e.p,2.7),Color("ffd18b"))
+		if e.kind=="boss":text3d("boss_name%d"%e.id,("메두사" if e.get("model","")=="gorgon" else ("중간 보스" if e.get("miniboss",false) else "최종 보스"))+" · "+game.battle_extras.affix_name(e.get("affix","")),point(e.p,2.7),Color("ffd18b"))
 		if e.get("elite", false):
 			ring("elite%d" % e.id, point(e.p,.07),.4,Color("ffc85c"))
 			text3d("elite_name%d" % e.id,"희귀 · " + game.battle_extras.affix_name(e.get("affix","")),point(e.p,1.7),Color("ffdb82"))
-		if e.windup > 0: ring("warn%d" % e.id, point(e.target, 0.05), 1.15 if e.kind == "boss" else 0.58, Color("ff674a"))
+		if e.windup>0:
+			if e.kind=="boss":boss_warning(e)
+			else:ring("warn%d"%e.id,point(e.target,.05),.58,Color("ff674a"))
 		if float(e.get("curse", 0)) > 0 or float(e.get("chains", 0)) > 0 or float(e.get("frailty", 0)) > 0: ring("curse%d" % e.id, point(e.p, 0.07), 0.38, Color("ba93ff"))
 	for i in range(game.minions.size()):
 		var m: Dictionary = game.minions[i]
@@ -287,6 +292,8 @@ func actor(key: String, color: Color, boss: bool, model: String = "") -> Node3D:
 	actors[key] = node
 	if key == "hero" or key.begins_with("enemy") or key.begins_with("minion"):
 		models.build(node, "hero" if key == "hero" else (model if not model.is_empty() else ("cyclops" if boss else "satyr")))
+		if boss:boss_weapon(node,model)
+		actor_finish(node)
 		return node
 	box(node, Vector3(0, 0.77, 0), Vector3(0.46, 0.5, 0.28), color)
 	var head := SphereMesh.new()
@@ -634,3 +641,59 @@ func sword_arc(index:int,bolt:Dictionary)->void:
 		ornaments[key]=mesh(self,surface.commit(),Vector3.ZERO,Color("c8eafa"))
 	var node:MeshInstance3D=ornaments[key]
 	node.visible=true;node.position=point(bolt.p,.5);node.rotation.y=atan2(bolt.v.x,bolt.v.y)
+
+func actor_finish(node:Node)->void:
+	for child in node.get_children():
+		if child is MeshInstance3D:
+			child.layers=2
+			var old=child.material_override
+			if old is StandardMaterial3D:
+				var mat:=StandardMaterial3D.new();mat.albedo_color=old.albedo_color
+				mat.roughness=.62;mat.metallic=.4 if old.albedo_color.r>.45 and old.albedo_color.b<.3 else .0
+				child.material_override=mat
+		actor_finish(child)
+func boss_pose(node:Node3D,e:Dictionary)->void:
+	if not node.has_node("Model"):return
+	var body:Node3D=node.get_node("Model");var weapon:Node3D=body.get_node("Weapon")
+	var charge:float=1-float(e.windup)/maxf(.01,float(e.get("windup_total",1))) if e.windup>0 else 0.0
+	var release:float=float(e.get("recovery",0))/.75
+	var type:String=e.get("boss_attack","slam")
+	body.rotation.x=0;weapon.rotation.x=0;weapon.position=weapon.get_meta("rest",Vector3.ZERO)
+	if e.windup>0:
+		node.rotation.y=atan2(e.get("attack_dir",Vector2.RIGHT).x,e.get("attack_dir",Vector2.RIGHT).y)
+		weapon.rotation.x=-1.6*charge if type=="slam" else -.5*charge
+		weapon.rotation.y=-1.5*charge if type=="sweep" else 0.0
+		weapon.position.y+=.3*charge;body.rotation.x=-.14*charge
+	elif release>0:
+		weapon.rotation.x=.75*release if type=="slam" else 0.0
+		weapon.rotation.y=1.8*release if type=="sweep" else 0.0
+		body.rotation.x=.2*release
+	for side in [-1,1]:
+		var arm=body.get_node_or_null("Arm%d"%side)
+		if arm!=null:arm.rotation.x=-charge*1.7 if e.windup>0 else release*.6
+func boss_warning(e:Dictionary)->void:
+	var type:String=e.get("boss_attack","slam")
+	var label:String={"slam":"내려찍기 · 원 밖으로", "sweep":"큰 휘두르기 · 뒤로 회피", "gaze":"석화 시선 · 측면으로", "poison_fan":"독침 부채 · 측면으로"}.get(type,"")
+	text3d("boss_cast%d"%e.id,label,point(e.p,3.3),Color("ffb68a"))
+	if type=="slam":ring("boss_circle%d"%e.id,point(e.target,.08),1.1,Color("ff4f31"));return
+	var key:String="boss_cone%d_%s"%[e.id,type]
+	if not ornaments.has(key):
+		var st:=SurfaceTool.new();st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		var arc:float=deg_to_rad(120 if type=="gaze" else (55 if type=="poison_fan" else 140))
+		for i in range(32):
+			for v in [Vector3.ZERO,Vector3(cos(-arc/2+arc*i/32),0,sin(-arc/2+arc*i/32)),Vector3(cos(-arc/2+arc*(i+1)/32),0,sin(-arc/2+arc*(i+1)/32))]:st.add_vertex(v)
+		var cone:=mesh(self,st.commit(),Vector3.ZERO,Color("cf382a"));var mat:=StandardMaterial3D.new();mat.shading_mode=BaseMaterial3D.SHADING_MODE_UNSHADED;mat.transparency=BaseMaterial3D.TRANSPARENCY_ALPHA;mat.cull_mode=BaseMaterial3D.CULL_DISABLED;mat.albedo_color=Color(.85,.16,.10,.32);cone.material_override=mat;ornaments[key]=cone
+	var cone:MeshInstance3D=ornaments[key];cone.visible=true;cone.position=point(e.get("attack_origin",e.p),.075);cone.rotation.y=-e.attack_dir.angle();cone.scale=Vector3.ONE*(4.2 if type=="gaze" else (3.7 if type=="poison_fan" else 2.2))
+
+func boss_weapon(node:Node3D,kind:String)->void:
+	var weapon:Node3D=node.get_node("Model/Weapon")
+	for child in weapon.get_children():child.visible=false
+	if kind=="gorgon":
+		cylinder(weapon,Vector3(0,.27,.05),.045,1.15,Color("78634a"))
+		var gem:=SphereMesh.new();gem.radius=.105;gem.height=.21
+		var glow:=mesh(weapon,gem,Vector3(0,.86,.05),Color("4bba70"))
+		var mat:=StandardMaterial3D.new();mat.albedo_color=Color("488b59");mat.emission_enabled=true;mat.emission=Color("2c793f");glow.material_override=mat
+	else:
+		var handle:=cylinder(weapon,Vector3(0,0,.27),.045,.8,Color("4e3020"));handle.rotation.x=PI/2
+		box(weapon,Vector3(0,0,.65),Vector3(.48,.22,.25),Color("58595b"))
+		for side in [-1,1]:box(weapon,Vector3(side*.24,0,.65),Vector3(.08,.27,.30),Color("a28750"))

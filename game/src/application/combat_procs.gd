@@ -26,3 +26,18 @@ func trinity(spec:Dictionary)->void:
 		if not e.dead and offset.length()<spec.reach and absf(game.aim.angle_to(offset))<deg_to_rad(spec.arc*.5):game.hit_enemy(e,spec.damage*.7,true)
 	for i in range(3):
 		game.bolts.append({"p":game.player,"v":game.aim.rotated((i-1)*.28)*620,"life":.85,"damage":spec.damage*.45,"friendly":true,"attack":game.attack_id,"skill_id":["fire_spear","ice_spear","lightning_spear"][i],"pierce":2,"hits":[],"chain_count":1,"return_multiplier":0,"knockback":12})
+
+func guide(b:Dictionary,delta:float)->void:
+	var rate:float=float(b.get("homing",0))
+	if rate<=0 or not b.get("friendly",false) or b.get("returning",false) or b.get("turning",false):return
+	var target:Dictionary={};var nearest:=450.0
+	for e in game.enemies:
+		if e.dead or int(e.id) in b.get("hits",[]):continue
+		var offset:Vector2=e.p-b.p
+		if offset.length()>450 or b.v.normalized().dot(offset.normalized())<-.2:continue
+		if int(e.id)==int(b.get("guide_target",-1)):target=e;break
+		if offset.length()<nearest:nearest=offset.length();target=e
+	if target.is_empty():b.guide_target=-1;return
+	b.guide_target=target.id
+	var angle:float=b.v.angle_to(target.p-b.p)
+	b.v=b.v.rotated(clampf(angle,-rate*delta,rate*delta))

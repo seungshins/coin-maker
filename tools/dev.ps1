@@ -56,6 +56,10 @@ try {
             & $engine --headless --path $gamePath --script res://tests/test_v0214.gd
             if ($LASTEXITCODE -ne 0) { throw "v0214 tests failed." }
             & $engine --headless --path $gamePath --script res://tests/test_v0215.gd
+            if ($LASTEXITCODE -ne 0) { throw "v0215 tests failed." }
+            & $engine --headless --path $gamePath --script res://tests/test_homing.gd
+            if ($LASTEXITCODE -ne 0) { throw "Homing tests failed." }
+            & $engine --headless --path $gamePath --script res://tests/test_boss_patterns.gd
         }
     }
     if ($LASTEXITCODE -ne 0) { throw "Godot exited with code $LASTEXITCODE" }

@@ -94,6 +94,10 @@ func _draw() -> void:
 		"pierce":
 			draw_line(c + Vector2(0, 27), c + Vector2(0, -26), color, 4)
 			for y in [-14, 0, 14]: draw_line(c + Vector2(-20, y), c + Vector2(20, y), color, 2)
+		"homing":
+			draw_arc(c,21,PI*.2,PI*1.7,30,color,4)
+			draw_colored_polygon(PackedVector2Array([c+Vector2(12,-26),c+Vector2(22,-10),c+Vector2(2,-14)]),color)
+			draw_circle(c,4,Color("a1def0"))
 		"empty":
 			draw_line(c - Vector2(15, 0), c + Vector2(15, 0), color, 3)
 			draw_line(c - Vector2(0, 15), c + Vector2(0, 15), color, 3)

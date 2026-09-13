@@ -80,6 +80,7 @@ func skill_spec(profile: Dictionary) -> Dictionary:
 			"spell_echo", "melee_echo":
 				spec.repeat = true
 				spec.damage *= data.support_echo[rarity]
+			"homing":spec.homing=data.support_homing[rarity];spec.damage*=.85
 			"pierce": spec.pierce_bonus += int(data.support_pierce[rarity])
 			"impact": spec.knockback += data.support_impact[rarity]
 			"fan":
@@ -210,6 +211,7 @@ func support_numbers(gem: Dictionary) -> String:
 		"minion_blast":return "8초간 초당 최대 체력12.5%% 소모 · 사망/만료 시 반경140, 소환 공격 피해 ×%.1f 폭발"%data.minion_blast[rarity]
 		"minion_splash":return "소환 공격 범위 반경%d · 피해 ×0.75"%data.minion_splash[rarity]
 		"spell_echo", "melee_echo": return "2회 반복 · 각 피해 %d%% · 추가 마나 없음" % roundi(data.support_echo[rarity] * 100)
+		"homing":return "투사체 유도 · 회전 초당%d° · 탐색450 · 피해 ×0.85 · 귀환 중 제외"%roundi(rad_to_deg(data.support_homing[rarity]))
 		"pierce": return "추가 관통 +%d" % data.support_pierce[rarity]
 		"impact": return "밀쳐내기 거리 +%d" % data.support_impact[rarity]
 		"fan": return "공격 각도 +%d° · 피해 -10%%" % data.support_fan[rarity]
@@ -279,7 +281,7 @@ func support_compatible(gem_id: String, skill_id: String) -> bool:
 		"duration": return "duration" in tags
 		"power", "impact": return true
 		"area": return "area" in tags
-		"split", "returning", "pierce": return "projectile" in tags
+		"split", "returning", "pierce", "homing": return "projectile" in tags
 		"spell_echo": return "spell" in tags and "summon" not in tags
 		"melee_echo": return "melee" in tags and "channel" not in tags
 	return false

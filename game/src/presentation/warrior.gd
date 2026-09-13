@@ -15,8 +15,8 @@ func build(parent:Node3D)->void:
 	var body:=Node3D.new()
 	body.name="Model"
 	parent.add_child(body)
-	var skin:=Color("b28c73")
-	var bronze:=Color("947344")
+	var skin:=Color("a66e50")
+	var bronze:=Color("a47b35")
 	var leather:=Color("422d27")
 	ellipsoid(body,Vector3(0,.87,0),Vector3(.21,.29,.12),skin)
 	for side in [-1,1]:
@@ -64,13 +64,16 @@ func build(parent:Node3D)->void:
 		for j in range(5):ellipsoid(body,Vector3(side*.16,.96-j*.055,.113),Vector3(.018,.025,.018),bronze)
 	var strap:MeshInstance3D=view.box(body,Vector3(0,.96,.15),Vector3(.055,.32,.018),leather)
 	strap.rotation.z=-.6
+	for side in [-1,1]:
+		ellipsoid(body,Vector3(side*.22,1.075,-.015),Vector3(.095,.06,.12),bronze)
+		view.box(body,Vector3(side*.045,1.348,.103),Vector3(.057,.019,.019),Color("1c1310"))
 	var cape:=SurfaceTool.new()
 	cape.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for i in range(12):
 		var x:float=-.23+i*.04
 		for vertex in [Vector3(x,1.08,-.10),Vector3(x+.04,1.08,-.10),Vector3(x,.41,-.25+sin(i)*.025),Vector3(x+.04,1.08,-.10),Vector3(x+.04,.41,-.25+sin(i+1)*.025),Vector3(x,.41,-.25+sin(i)*.025)]: cape.add_vertex(vertex)
 	cape.generate_normals()
-	var cloth:MeshInstance3D=view.mesh(body,cape.commit(),Vector3.ZERO,Color("65292c"))
+	var cloth:MeshInstance3D=view.mesh(body,cape.commit(),Vector3.ZERO,Color("4e1018"))
 	var mat:StandardMaterial3D=cloth.material_override.duplicate()
 	mat.cull_mode=BaseMaterial3D.CULL_DISABLED
 	cloth.material_override=mat

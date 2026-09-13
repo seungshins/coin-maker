@@ -21,6 +21,8 @@ var minions: Array[Dictionary] = []
 var stolen_affixes := {}
 var battle_extras = preload("res://src/application/battle_extras.gd").new(self)
 var actions
+var petrify_time:=0.0
+var boss_combat=preload("res://src/application/boss_combat.gd").new(self)
 var proc_cooldowns:Dictionary={}
 var combat_procs=preload("res://src/application/combat_procs.gd").new(self)
 var visual_weapon:=""
@@ -627,6 +629,8 @@ func _physics_process(delta: float) -> void:
 	for key in ability_cooldowns.keys(): ability_cooldowns[key] = maxf(0, ability_cooldowns[key] - delta)
 	for key in burst_timers.keys(): burst_timers[key] = maxf(0, burst_timers[key] - delta)
 	if float(burst_timers.get("burst:haste", 0)) > 0: stats.move *= 1.0+.4*rules.buff_scale(profile.level)
+	petrify_time=maxf(0,petrify_time-delta)
+	if petrify_time>0:stats.move*=.55
 	if float(stolen_affixes.get("swift", 0)) > 0: stats.move *= 1.25
 	var movement := Vector2(float(controls.pressed(KEY_D)) - float(controls.pressed(KEY_A)), float(controls.pressed(KEY_S)) - float(controls.pressed(KEY_W))).normalized()
 	aim = (mouse_target() - player).normalized()
@@ -697,7 +701,7 @@ func attack(spec: Dictionary, repeated: bool = false, target_override: Variant =
 		for i in range(int(spec.projectiles)):
 			var angle: float = (float(i) - (spec.projectiles - 1) * 0.5) * 0.16
 			var speed := 900.0 if profile.skill == "bow" or spec.get("arrow", false) else 660.0
-			bolts.append({"p": player, "v": aim.rotated(angle) * speed, "life": spec.reach / speed, "damage": spec.damage, "friendly": true, "attack": attack_id, "arrow": profile.skill in ["bow", "knives"] or spec.get("arrow", false), "skill_id": profile.skill, "chain_count": spec.get("chain_count", 0), "return_multiplier": spec.get("return_multiplier", 0), "returning": false, "knockback": spec.get("knockback", 0), "pierce": (3 if profile.skill == "knives" else 1) + int(spec.get("pierce_bonus", 0)), "hits": []})
+			bolts.append({"p": player, "v": aim.rotated(angle) * speed, "life": spec.reach / speed, "damage": spec.damage, "friendly": true, "attack": attack_id, "arrow": profile.skill in ["bow", "knives"] or spec.get("arrow", false), "skill_id": profile.skill, "chain_count": spec.get("chain_count", 0), "return_multiplier": spec.get("return_multiplier", 0), "returning": false, "homing":spec.get("homing",0), "knockback": spec.get("knockback", 0), "pierce": (3 if profile.skill == "knives" else 1) + int(spec.get("pierce_bonus", 0)), "hits": []})
 
 func hit_enemy(enemy: Dictionary, damage: float, melee: bool, element: String = "physical", knockback: float = 0.0, allow_proc:bool=true) -> void:
 	if enemy.dead: return
@@ -758,6 +762,7 @@ func update_enemies(delta: float) -> void:
 		var dist: float = e.p.distance_to(focus)
 		if e.zone > mini(profile.cleared.size(), zone_count() - 1) or dist > 650: continue
 		e.aura_fx_cd=maxf(0,float(e.get("aura_fx_cd",0))-delta)
+		if e.kind=="boss":boss_combat.update(e,delta,focus);continue
 		if e.windup > 0:
 			e.windup -= action_delta
 			if e.windup <= 0:
@@ -795,6 +800,7 @@ func update_enemies(delta: float) -> void:
 func update_bolts(delta: float) -> void:
 	for i in range(bolts.size() - 1, -1, -1):
 		var b := bolts[i]
+		combat_procs.guide(b,delta)
 		var old: Vector2 = b.p
 		if b.get("returning", false):
 			b.v = (player - b.p).normalized() * 800
