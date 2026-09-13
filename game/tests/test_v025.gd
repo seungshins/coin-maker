@@ -19,7 +19,7 @@ func run() -> void:
 	game.profile.loadout = ["slash", "bow", "", "", "", ""]
 	game.mana = 100
 	check(game.actions.use_slot(0), "left skill fires")
-	game.profile.items[0].weapon_type="bow"
+	game.profile.items[0].weapon_type="bow";game.profile.primary_weapon="bow"
 	check(game.cooldown > 0 and game.actions.use_slot(1), "right skill fires during left cooldown")
 	check(not game.actions.use_slot(0) and not game.actions.use_slot(1), "individual cooldowns still enforced")
 	check(game.mana == 92 and game.bolts.size() == 3, "simultaneous skills pay both costs")

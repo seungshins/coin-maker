@@ -7,6 +7,7 @@ var lighting_state := -1
 var camera: Camera3D
 var terrain: Node3D
 var actors := {}
+var actor_templates:Dictionary={}
 var ornaments := {}
 var materials := {}
 var character_textures := {}
@@ -108,7 +109,7 @@ func refresh(delta: float) -> void:
 	camera.look_at(point(focus), Vector3.UP)
 	var hero: Node3D = actor("hero", Color("b45e39"), false)
 	hero.position = point(game.town.position_in_town if town else game.player)
-	var direction: Vector2 = Vector2(game.town.direction, 0) if town else game.aim
+	var direction: Vector2 = game.town.facing if town else (game.aim if game.attack_flash>0 or game.channeling else game.move_facing)
 	hero.rotation.y = atan2(direction.x, direction.y)
 	hero.scale = Vector3.ONE * (1.0 if town else game.battle_extras.hero_scale())
 	pose(hero, game.town.phase if town else (clock * 12 if game.moving else 0), not town and game.channeling)
@@ -135,7 +136,12 @@ func refresh(delta: float) -> void:
 			ornaments[chest_key]=model
 		var box_:Node3D=ornaments[chest_key];box_.visible=true;box_.position=point(chest.p,.3)
 		text3d("treasure_label%d"%i,"봉인된 보물 ["+game.controls.label(KEY_F)+"]" if chest.state=="sealed" else "수호자 처치",point(chest.p,1.1),Color("ffdc88"))
+	var new_models:=0
 	for e in game.enemies:
+		if e.p.distance_to(game.player)>1500:continue
+		if not actors.has("enemy%d"%e.id):
+			if new_models>=2:continue
+			new_models+=1
 		if e.dead and e.death_time <= 0: continue
 		var color: Color = {"swift": Color("67ac84"), "fury": Color("bc614b"), "titan": Color("8975ad")}.get(e.get("affix", ""), Color("96715a"))
 		var enemy := actor("enemy%d" % e.id, color, e.kind == "boss", e.get("model", "satyr"))
@@ -300,6 +306,9 @@ func cylinder(parent: Node3D, position_: Vector3, radius: float, height: float, 
 
 func actor(key: String, color: Color, boss: bool, model: String = "") -> Node3D:
 	if actors.has(key): actors[key].visible = true; return actors[key]
+	var template_key:String=("hero" if key=="hero" else model)+str(boss)
+	if actor_templates.has(template_key) and (key=="hero" or key.begins_with("enemy") or key.begins_with("minion")):
+		var instance:Node3D=actor_templates[template_key].duplicate(0);add_child(instance);actors[key]=instance;return instance
 	var node := Node3D.new()
 	add_child(node)
 	actors[key] = node
@@ -307,6 +316,7 @@ func actor(key: String, color: Color, boss: bool, model: String = "") -> Node3D:
 		models.build(node, "hero" if key == "hero" else (model if not model.is_empty() else ("cyclops" if boss else "satyr")))
 		if boss:boss_weapon(node,model)
 		actor_finish(node)
+		var template:Node3D=node.duplicate(0);actor_templates[template_key]=template
 		return node
 	box(node, Vector3(0, 0.77, 0), Vector3(0.46, 0.5, 0.28), color)
 	var head := SphereMesh.new()
@@ -450,7 +460,7 @@ func draw_effect(fx: Dictionary, i: int) -> void:
 			for step in range(36):
 				var a:float=float(step)/36*TAU
 				var b:float=float(step+1)/36*TAU
-				for v in [Vector3(cos(a)*.82,0,sin(a)*.82),Vector3(cos(a),0,sin(a)),Vector3(cos(b),0,sin(b)),Vector3(cos(a)*.82,0,sin(a)*.82),Vector3(cos(b),0,sin(b)),Vector3(cos(b)*.82,0,sin(b)*.82)]: ribbon.add_vertex(v)
+				for v in [Vector3(cos(a)*.82,0,sin(a)*.82),Vector3(cos(a)*(1.1 if step%3==0 else 1),.08,sin(a)*(1.1 if step%3==0 else 1)),Vector3(cos(b)*(1.1 if step%3==0 else 1),-.04,sin(b)*(1.1 if step%3==0 else 1)),Vector3(cos(a)*.82,0,sin(a)*.82),Vector3(cos(b),0,sin(b)),Vector3(cos(b)*.82,0,sin(b)*.82)]: ribbon.add_vertex(v)
 			ribbon.generate_normals()
 			var arc_node:=mesh(self,ribbon.commit(),Vector3.ZERO,Color("fff1c8"))
 			var shader:=Shader.new()
@@ -645,10 +655,11 @@ func sword_arc(index:int,bolt:Dictionary)->void:
 	var key:="sword_arc%d"%index
 	if not ornaments.has(key):
 		var surface:=SurfaceTool.new();surface.begin(Mesh.PRIMITIVE_TRIANGLES)
-		for i in range(20):
-			var a:float=-1.35+i*2.7/20;var b:float=a+2.7/20
+		for i in range(36):
+			var a:float=-1.35+i*2.7/36;var b:float=a+2.7/36
 			var v:Array=[]
-			for pair in [[a,.85],[a,.68],[b,.85],[b,.68]]:v.append(Vector3(sin(pair[0])*pair[1],0,cos(pair[0])*pair[1]))
+			var tooth:float=1.08 if i%3==0 else .85
+			for pair in [[a,tooth],[a,.53],[b,tooth],[b,.53]]:v.append(Vector3(sin(pair[0])*pair[1],.13 if pair[1]<.6 else -.06,cos(pair[0])*pair[1]))
 			for n in [0,1,2,2,1,3]:surface.add_vertex(v[n])
 		surface.generate_normals()
 		ornaments[key]=mesh(self,surface.commit(),Vector3.ZERO,Color("c8eafa"))
@@ -730,3 +741,6 @@ func actor_grain()->NoiseTexture2D:
 		grain_texture=NoiseTexture2D.new();grain_texture.width=128;grain_texture.height=128;grain_texture.noise=noise
 		var ramp:=Gradient.new();ramp.set_color(0,Color(.48,.43,.36));ramp.set_color(1,Color(.94,.9,.82));grain_texture.color_ramp=ramp
 	return grain_texture
+
+func _exit_tree()->void:
+	for template in actor_templates.values():template.free()

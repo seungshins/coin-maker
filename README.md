@@ -1,7 +1,7 @@
 # coin-maker
 
-현재 플레이 버전 **v0.2.17**: 3D 쿼터뷰, 액트 귀환과 T1–16 엔드게임, 100레벨 성장, 12칸 장비·네 무기 동시 장착, 무기별 스킬과 가차. [조작·시스템 안내](game/README.md).
-[최신 버전 다운로드 — GitHub Releases](https://github.com/seungshins/coin-maker/releases/latest) · Windows/macOS/Linux. 로컬 빌드: `tools\package.cmd all` (`dist/0.2.17/`, Git 제외).
+현재 플레이 버전 **v0.2.18**: 3D 쿼터뷰, 액트 귀환과 T1–16 엔드게임, 100레벨 성장, 12칸 장비·네 무기 동시 장착, 무기별 스킬과 가차. [조작·시스템 안내](game/README.md).
+[최신 버전 다운로드 — GitHub Releases](https://github.com/seungshins/coin-maker/releases/latest) · Windows/macOS/Linux. 로컬 빌드: `tools\package.cmd all` (`dist/0.2.18/`, Git 제외).
 
 ## 개발 시작
 

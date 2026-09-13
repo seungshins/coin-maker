@@ -26,7 +26,10 @@ func run()->void:
 	for weapon in ["spear","wand","bow"]:
 		var item:Dictionary=g.rules.item_roll(g.rng,0,1,weapon)
 		p.items.append(item);p.equipment[g.rules.equip_slot(p,item)]=p.items.size()-1
-	for id in ["slash","spear_throw","bolt","bow"]:check(g.rules.weapon_allows(p,id),"all four weapon skills available together")
+	for id in ["slash","spear_throw","bolt","bow"]:
+		p.primary_weapon=g.rules.required_weapon(id)
+		check(g.rules.weapon_allows(p,id),"primary weapon can switch among four equipped weapons")
+	p.primary_weapon="sword"
 	var sword_damage:float=g.rules.skill_spec(p).damage
 	var bow_index:int=g.rules.weapon_index(p,"bow");p.items[bow_index].value=9999
 	check(is_equal_approx(g.rules.skill_spec(p).damage,sword_damage),"inactive bow does not add sword damage")

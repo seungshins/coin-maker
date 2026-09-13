@@ -15,7 +15,7 @@ func run() -> void:
 	game.profile.skills = game.rules.data.skills.keys()
 	Storage.ensure(game.profile)
 	game.save_blocked = false
-	game.profile.items[0].weapon_type="bow"
+	game.profile.items[0].weapon_type="bow";game.profile.primary_weapon="bow"
 	check(game.actions.assign(0, "ice_arrow"), "assign owned primary")
 	check(not game.actions.assign(2, "invalid"), "unknown skill denied")
 	check(game.actions.assign(1, "ice_arrow") and game.profile.loadout[0] != "ice_arrow", "duplicate binding swaps instead of copies")

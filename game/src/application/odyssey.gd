@@ -26,6 +26,8 @@ var boss_combat=preload("res://src/application/boss_combat.gd").new(self)
 var proc_cooldowns:Dictionary={}
 var combat_procs=preload("res://src/application/combat_procs.gd").new(self)
 var visual_weapon:=""
+var move_facing:=Vector2.DOWN
+var support_expansion=preload("res://src/application/support_expansion.gd").new(self)
 var cooldown_totals:Dictionary={}
 var ability_cooldowns := {}
 var burst_timers := {}
@@ -353,7 +355,8 @@ func toggle_support(index: int) -> void:
 	else:
 		for old in next.supports.duplicate():
 			if next.gems[int(old)].id == next.gems[index].id: next.supports.erase(old)
-		if next.supports.size() >= rules.slots(next):
+		var reserved:int=1 if next.gems[index].id=="trigger" or next.supports.any(func(i):return next.gems[int(i)].id=="trigger") else 0
+		if next.supports.size()+reserved >= rules.slots(next):
 			notify("먼저 다른 보조를 해제하세요.")
 			return
 		next.supports.append(index)
@@ -392,6 +395,7 @@ func show_shop() -> void:
 
 func gacha(kind: int, shards: bool = false, weapon_filter:String="") -> void:
 	Storage.ensure(profile)
+	if int(profile.gacha_left)<=0:notify("이번 레벨의 뽑기 기회를 모두 사용했습니다. 다음 레벨에 3회 충전됩니다.");return
 	if action_lock or kind < 0 or kind > 2 or weapon_filter not in ["","sword","spear","wand","bow"]: return
 	var cost:int=rules.gacha_cost(profile,shards)
 	if (profile.shards < cost if shards else profile.gold < cost): return
@@ -399,6 +403,7 @@ func gacha(kind: int, shards: bool = false, weapon_filter:String="") -> void:
 	action_lock = true
 	var next := profile.duplicate(true)
 	var old_rng := rng.state
+	next.gacha_left-=1
 	if shards: next.shards -= cost
 	else: next.gold -= cost
 	var weights: Array = rules.gacha_weights(profile,int(next.pity[kind]))
@@ -633,6 +638,7 @@ func _physics_process(delta: float) -> void:
 	var movement := Vector2(float(controls.pressed(KEY_D)) - float(controls.pressed(KEY_A)), float(controls.pressed(KEY_S)) - float(controls.pressed(KEY_W))).normalized()
 	aim = (mouse_target() - player).normalized()
 	moving = movement.length_squared() > 0
+	if moving:move_facing=movement
 	if channeling: movement *= 0.8
 	if dodge > 0: movement = dodge_dir * 3.0
 	var destination: Vector2 = player + movement * stats.move * delta
@@ -666,10 +672,14 @@ func can_move(p: Vector2) -> bool:
 	return true
 
 func attack(spec: Dictionary, repeated: bool = false, target_override: Variant = null) -> void:
+	var original_skill:String=profile.skill
+	profile.skill=str(spec.get("id",profile.skill))
 	if not repeated and mana < float(spec.get("mana", 0)):
 		cooldown = 0.2
+		profile.skill=original_skill
 		return
 	if not repeated: mana -= float(spec.get("mana", 0))
+	preload("res://src/application/support_expansion.gd").prepare(self,spec,repeated)
 	var cast_target: Vector2 = mouse_target() if target_override == null else target_override
 	if not repeated and spec.get("repeat", false): pending_repeats.append({"delay": 0.22, "spec": spec.duplicate(true), "aim": aim, "target": cast_target})
 	combat_audio.play_effect("bow" if profile.skill.ends_with("arrow") or profile.skill == "arrow_rain" else ("thunder" if profile.skill == "lava_wave" else profile.skill))
@@ -685,7 +695,7 @@ func attack(spec: Dictionary, repeated: bool = false, target_override: Variant =
 		cast_field(target, spec)
 	elif spec.get("wave", false):
 		guard = 0.42
-		bolts.append({"p": player, "v": aim * 370, "life": spec.reach / 370, "damage": spec.damage, "friendly": true, "attack": attack_id, "wave": true, "knockback": maxf(30,spec.get("knockback", 0)) if profile.skill=="sword_wave" else spec.get("knockback",0), "pierce": 99, "hits": [], "skill_id": profile.skill})
+		bolts.append({"p": player, "v": aim * 370, "life": spec.reach / 370, "damage": spec.damage, "friendly": true, "attack": attack_id, "wave": true, "knockback": maxf(30,spec.get("knockback", 0)) if profile.skill=="sword_wave" else spec.get("knockback",0), "pierce": 99, "hits": [], "support_context":spec.get("support_context",{}), "skill_id": profile.skill})
 	elif spec.melee:
 		shake = maxf(shake, 2.0)
 		guard = minf(0.42, spec.interval)
@@ -694,15 +704,21 @@ func attack(spec: Dictionary, repeated: bool = false, target_override: Variant =
 			if enemy.dead: continue
 			var offset: Vector2 = enemy.p - player
 			if offset.length() <= spec.reach + (26 if enemy.kind == "boss" else 12) and (spec.arc >= 360 or absf(aim.angle_to(offset)) <= deg_to_rad(spec.arc * 0.5)):
-				hit_enemy(enemy, spec.damage, true, battle_extras.element(str(spec.get("id", profile.skill))), spec.get("knockback", 0))
+				hit_enemy(enemy, spec.damage, true, battle_extras.element(str(spec.get("id", profile.skill))), spec.get("knockback", 0),true,spec.get("support_context",{}))
 	else:
 		for i in range(int(spec.projectiles)):
 			var angle: float = (float(i) - (spec.projectiles - 1) * 0.5) * 0.16
 			var speed := 900.0 if profile.skill == "bow" or spec.get("arrow", false) else 660.0
-			bolts.append({"p": player, "v": aim.rotated(angle) * speed, "life": spec.reach / speed, "damage": spec.damage, "friendly": true, "attack": attack_id, "arrow": profile.skill in ["bow", "knives"] or spec.get("arrow", false), "skill_id": profile.skill, "chain_count": spec.get("chain_count", 0), "return_multiplier": spec.get("return_multiplier", 0), "returning": false, "homing":spec.get("homing",0), "knockback": spec.get("knockback", 0), "pierce": (3 if profile.skill == "knives" else 1) + int(spec.get("pierce_bonus", 0)), "hits": []})
+			bolts.append({"p": player, "v": aim.rotated(angle) * speed, "life": spec.reach / speed, "damage": spec.damage, "friendly": true, "attack": attack_id, "arrow": profile.skill in ["bow", "knives"] or spec.get("arrow", false), "support_context":spec.get("support_context",{}), "skill_id": profile.skill, "chain_count": spec.get("chain_count", 0), "return_multiplier": spec.get("return_multiplier", 0), "returning": false, "homing":spec.get("homing",0), "knockback": spec.get("knockback", 0), "pierce": (3 if profile.skill == "knives" else 1) + int(spec.get("pierce_bonus", 0)), "hits": []})
 
-func hit_enemy(enemy: Dictionary, damage: float, melee: bool, element: String = "physical", knockback: float = 0.0, allow_proc:bool=true) -> void:
+	profile.skill=original_skill
+
+func hit_enemy(enemy: Dictionary, damage: float, melee: bool, element: String = "physical", knockback: float = 0.0, allow_proc:bool=true, context:Dictionary={}) -> void:
 	if enemy.dead: return
+	var bonus_damage:float=support_expansion.bonus(context,damage)
+	var resistance:float=float(enemy.get("resistance",0))-(.05+.03*int(context.penetration) if context.has("penetration") else 0.0)
+	damage=(damage if element=="physical" else 0.0)+(bonus_damage+(damage if element!="physical" else 0.0))*(1.0-clampf(resistance,-.3,.75))
+	var effective_hp:float=maxf(0,enemy.hp)
 	var elemental:Dictionary=rules.elemental_bonuses(profile)
 	var bonus:float=0.0
 	for kind in elemental:
@@ -716,6 +732,7 @@ func hit_enemy(enemy: Dictionary, damage: float, melee: bool, element: String = 
 	if melee: effects.append({"kind": "cut", "p": enemy.p, "life": 0.22})
 	if enemy.get("affix", "") == "titan": damage *= 0.85
 	enemy.hp -= damage
+	support_expansion.on_hit(context,enemy,minf(effective_hp,damage))
 	enemy.hit = 0.12
 	shake = maxf(shake, 3.5 if melee else 1.5)
 	effects.append({"kind": "impact", "p": enemy.p + Vector2(0, -25), "life": 0.18})
@@ -729,6 +746,7 @@ func hit_enemy(enemy: Dictionary, damage: float, melee: bool, element: String = 
 		battle_extras.push(enemy, (28.0 if melee else 7.0) + knockback)
 	if enemy.hp <= 0:
 		enemy.dead = true
+		if int(profile.level)>=100 and enemy.kind=="boss" and not enemy.get("miniboss",false):profile.gacha_left=mini(3,int(profile.get("gacha_left",0))+1)
 		recharge_potions(.5 if enemy.kind=="boss" else (.2 if enemy.get("elite",false) else .08))
 		battle_extras.on_kill(enemy, element)
 		enemy.death_time = 0.8
@@ -816,7 +834,7 @@ func update_bolts(delta: float) -> void:
 					var leg := "last_return_attack" if b.get("returning", false) else "last_attack"
 					if int(e.get(leg, -1)) != int(b.attack):
 						e[leg] = b.attack
-						hit_enemy(e, b.damage, b.get("wave", false), battle_extras.element(str(b.get("skill_id", ""))), b.get("knockback", 0))
+						hit_enemy(e, b.damage, b.get("wave", false), battle_extras.element(str(b.get("skill_id", ""))), b.get("knockback", 0),true,b.get("support_context",{}))
 						if not b.get("returning", false): elemental_hit(b, e)
 					if not b.has("hits"): b.hits = []
 					b.hits.append(int(e.id))
@@ -1028,7 +1046,7 @@ func use_mana_potion() -> void:
 func cast_field(target: Vector2, spec: Dictionary) -> void:
 	if spec.get("follow",false):
 		fields=fields.filter(func(f):return f.kind!=profile.skill)
-	fields.append({"follow": spec.get("follow",false), "p": player if spec.get("follow",false) else target, "radius": spec.reach, "damage": spec.damage, "knockback": spec.get("knockback", 0), "kind": profile.skill, "life": float(spec.get("duration",3.0 if profile.skill == "blizzard" else (2.0 if profile.skill == "arrow_rain" else 0.31))), "tick": 0.3 if profile.skill == "thunder" else 0.0})
+	fields.append({"support_context":spec.get("support_context",{}), "follow": spec.get("follow",false), "p": player if spec.get("follow",false) else target, "radius": spec.reach, "damage": spec.damage, "knockback": spec.get("knockback", 0), "kind": profile.skill, "life": float(spec.get("duration",3.0 if profile.skill == "blizzard" else (2.0 if profile.skill == "arrow_rain" else 0.31))), "tick": 0.3 if profile.skill == "thunder" else 0.0})
 
 func update_fields(delta: float) -> void:
 	for i in range(fields.size() - 1, -1, -1):
@@ -1039,7 +1057,7 @@ func update_fields(delta: float) -> void:
 			field.tick += 0.5
 			for e in enemies:
 				if not e.dead and (not field.get("minion",false) or int(e.zone)<=mini(profile.cleared.size(),zone_count()-1)) and e.p.distance_to(field.p) <= field.radius:
-					hit_enemy(e, field.damage, false, battle_extras.element(field.kind), field.get("knockback", 0),not field.get("minion",false))
+					hit_enemy(e, field.damage, false, battle_extras.element(field.kind), field.get("knockback", 0),not field.get("minion",false),field.get("support_context",{}))
 					if field.kind in ["blizzard", "ice_zone"]: e.slow_time = 1.0; e.slow = 0.3
 			if field.kind == "thunder": combat_audio.play_effect("thunder")
 			if field.kind == "thunder": effects.append({"kind": "thunder", "p": field.p, "radius": field.radius, "life": 0.35})

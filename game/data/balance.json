@@ -20,7 +20,7 @@
     "slash": {
       "name": "아레스의 참격",
       "damage": 48,
-      "interval": 0.55,
+      "interval": 0.4,
       "reach": 126,
       "arc": 150,
       "melee": true,
@@ -34,9 +34,9 @@
     },
     "whirl": {
       "name": "아킬레우스의 선회",
-      "damage": 30,
+      "damage": 24,
       "interval": 0.3,
-      "reach": 108,
+      "reach": 190,
       "arc": 360,
       "melee": true,
       "description": "배치한 키 유지: 이동하며 연속 회전 · 공격 중 받는 피해 감소",
@@ -117,7 +117,7 @@
     "knives": {
       "name": "페르세우스의 칼날",
       "damage": 40,
-      "interval": 0.6,
+      "interval": 0.4,
       "reach": 560,
       "arc": 0,
       "melee": false,
@@ -133,7 +133,7 @@
     "ice_arrow": {
       "name": "보레아스의 얼음 화살",
       "damage": 29,
-      "interval": 0.6,
+      "interval": 0.4,
       "reach": 760,
       "arc": 0,
       "melee": false,
@@ -150,7 +150,7 @@
     "lightning_arrow": {
       "name": "제우스의 번개 화살",
       "damage": 32,
-      "interval": 0.6,
+      "interval": 0.4,
       "reach": 760,
       "arc": 0,
       "melee": false,
@@ -167,7 +167,7 @@
     "fire_arrow": {
       "name": "헤파이스토스의 화염 화살",
       "damage": 78,
-      "interval": 0.8,
+      "interval": 0.4,
       "reach": 760,
       "arc": 0,
       "melee": false,
@@ -201,7 +201,7 @@
     "lava_wave": {
       "name": "헤파이스토스의 용암 파도",
       "damage": 85,
-      "interval": 1,
+      "interval": 0.4,
       "reach": 480,
       "arc": 0,
       "melee": true,
@@ -235,7 +235,7 @@
       "name": "아테나의 관통창",
       "description": "긴 사거리의 좁은 찌르기 · 부채 보조로 넓게 휩쓸기",
       "damage": 65,
-      "interval": 0.65,
+      "interval": 0.4,
       "reach": 195,
       "arc": 35,
       "melee": true,
@@ -250,7 +250,7 @@
       "name": "아킬레우스의 투창",
       "description": "빠른 창 투척 · 연쇄 보조로 주변 적에게 전파",
       "damage": 55,
-      "interval": 0.65,
+      "interval": 0.4,
       "reach": 850,
       "arc": 0,
       "melee": false,
@@ -307,7 +307,7 @@
       "name": "제우스의 번개 투창",
       "description": "적중하면 주변 적 셋에게 번개가 연쇄됩니다.",
       "damage": 50,
-      "interval": 0.65,
+      "interval": 0.4,
       "reach": 850,
       "arc": 0,
       "melee": false,
@@ -324,7 +324,7 @@
       "name": "헤파이스토스의 불꽃 투창",
       "description": "적중 위치에 불길을 남겨 지속 피해를 줍니다.",
       "damage": 50,
-      "interval": 0.65,
+      "interval": 0.4,
       "reach": 850,
       "arc": 0,
       "melee": false,
@@ -341,7 +341,7 @@
       "name": "보레아스의 서리 투창",
       "description": "적중 위치에 냉기 지대를 남겨 적을 늦추고 지속 피해를 줍니다.",
       "damage": 50,
-      "interval": 0.65,
+      "interval": 0.4,
       "reach": 850,
       "arc": 0,
       "melee": false,
@@ -357,7 +357,7 @@
     "sword_wave": {
       "name": "아레스의 검기",
       "damage": 68,
-      "interval": 1,
+      "interval": 0.4,
       "reach": 480,
       "arc": 0,
       "melee": true,
@@ -408,7 +408,7 @@
       "name": "삼신의 분광창",
       "description": "창 찌르기 뒤 전방 3방향으로 화염·냉기·번개 줄기 · 줄기 각각 기본 피해45%",
       "damage": 54,
-      "interval": 1.05,
+      "interval": 0.4,
       "reach": 195,
       "arc": 35,
       "melee": true,
@@ -529,6 +529,86 @@
     "homing": {
       "name": "아르테미스의 인도",
       "description": "투사체가 전방 주변 적을 추적 · 피해15% 감소 · 귀환 중에는 추적하지 않음"
+    },
+    "archmage": {
+      "name": "대마법사",
+      "tags": [
+        "support",
+        "primary"
+      ],
+      "description": "대마법사 보조"
+    },
+    "life_leech": {
+      "name": "생명 갈취",
+      "tags": [
+        "support",
+        "primary"
+      ],
+      "description": "생명 갈취 보조"
+    },
+    "mana_leech": {
+      "name": "정신 갈취",
+      "tags": [
+        "support",
+        "primary"
+      ],
+      "description": "정신 갈취 보조"
+    },
+    "added_fire": {
+      "name": "불꽃 부여",
+      "tags": [
+        "support",
+        "primary"
+      ],
+      "description": "불꽃 부여 보조"
+    },
+    "added_ice": {
+      "name": "서리 부여",
+      "tags": [
+        "support",
+        "primary"
+      ],
+      "description": "서리 부여 보조"
+    },
+    "added_lightning": {
+      "name": "전격 부여",
+      "tags": [
+        "support",
+        "primary"
+      ],
+      "description": "전격 부여 보조"
+    },
+    "attack_haste": {
+      "name": "신속한 공격",
+      "tags": [
+        "support",
+        "primary"
+      ],
+      "description": "신속한 공격 보조"
+    },
+    "cast_haste": {
+      "name": "신속한 영창",
+      "tags": [
+        "support",
+        "primary"
+      ],
+      "description": "신속한 영창 보조"
+    },
+    "penetration": {
+      "name": "원소 관통",
+      "tags": [
+        "support",
+        "primary"
+      ],
+      "description": "원소 관통 보조"
+    },
+    "trigger": {
+      "name": "운명의 연쇄",
+      "tags": [
+        "support",
+        "primary"
+      ],
+      "description": "운명의 연쇄 보조"
     }
   },
   "support_power": [

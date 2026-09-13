@@ -2,6 +2,8 @@ extends RefCounted
 var game
 const SIZES=[Vector2i(1280,720),Vector2i(1600,900),Vector2i(1920,1080),Vector2i(2560,1440)]
 var selected:=0
+var show_fps:=false
+var fps_label:Label
 var display_mode:=0
 var ui_scale:=1.0
 var zoom_factor:=1.0
@@ -28,6 +30,11 @@ func apply(index:int,save:bool=true)->void:
 	apply_ui()
 	if save:save_config()
 func apply_ui()->void:
+	if fps_label==null and is_instance_valid(game.ui):
+		fps_label=Label.new();game.ui.add_child(fps_label);fps_label.mouse_filter=Control.MOUSE_FILTER_IGNORE;fps_label.add_theme_color_override("font_color",Color("c3ff92"))
+	if fps_label!=null:
+		fps_label.visible=show_fps;fps_label.text="%d FPS · %.1f ms"%[Engine.get_frames_per_second(),1000.0/maxf(1,Engine.get_frames_per_second())]
+		fps_label.position=(Vector2(1080,40)-game.ui.position)/ui_scale
 	if is_instance_valid(game.ui):
 		game.ui.scale=Vector2.ONE*ui_scale
 		game.ui.position=Vector2(640,360)*(1-ui_scale)
@@ -39,6 +46,7 @@ func save_config()->void:
 	var config:=ConfigFile.new()
 	config.set_value("display","resolution",selected)
 	config.set_value("display","mode",display_mode)
+	config.set_value("display","fps",show_fps)
 	config.set_value("display","ui_scale",ui_scale)
 	config.set_value("display","zoom",zoom_factor)
 	var error:int=config.save(path)
@@ -46,6 +54,7 @@ func save_config()->void:
 func restore()->void:
 	var config:=ConfigFile.new()
 	if config.load(path)!=OK:return
+	show_fps=bool(config.get_value("display","fps",false))
 	display_mode=clampi(int(config.get_value("display","mode",0)),0,2)
 	ui_scale=clampf(float(config.get_value("display","ui_scale",1)),.8,1.1)
 	zoom_factor=clampf(float(config.get_value("display","zoom",1)),.85,1.5)
@@ -65,6 +74,7 @@ func show_panel(back:Callable)->void:
 		var i:=index
 		game.button(sizes,"%d × %d%s"%[SIZES[i].x,SIZES[i].y," ✓" if i==selected else ""],func():choose_resolution(i);show_panel(back))
 	game.text_line(box,"전체 창은 작업 표시줄을 남기는 테두리 없는 창입니다. 전장 배율은 캐릭터·적·스킬에 함께 적용됩니다.")
+	game.button(box,"프레임 표시: "+("켜짐" if show_fps else "꺼짐"),func():show_fps=not show_fps;save_config();show_panel(back))
 	game.button(box,"장비 획득 필터",func():game.show_loot_filter(func():show_panel(back)))
 	game.button(box,"조작 안내 · 키 설정",func():game.controls.show_panel(func():show_panel(back)))
 	game.button(box,"돌아가기",back)

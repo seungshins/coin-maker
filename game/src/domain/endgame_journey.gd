@@ -3,14 +3,14 @@ extends RefCounted
 static func build(source:Dictionary,tier:int,variant:int)->Dictionary:
 	var stage:Dictionary=source.duplicate(true)
 	var count:int=7 if tier>=12 else (5 if tier>=6 else 3)
-	stage.layout_revision=int(source.get("layout_revision",0))+1400+tier
+	stage.layout_revision=int(source.get("layout_revision",0))+1500+tier
 	var theme:int=variant%6
 	stage["journey_theme"]=theme
 	stage.name=str(source.name)+" · "+["화산 능선","굽이진 계곡","초승달 해안","십자 신전","트로이 성곽","해상 잔해"][theme]+" T%d"%tier
 	stage["journey"]=true
 	stage["miniboss_zones"]=[1,3,5] if tier>=12 else ([2] if tier>=6 else [])
 	stage.centers=[];stage.polygons=[];stage.roads=[];stage.connections=[];stage.counts=[];stage.zones=[];stage.rocks=[]
-	stage.road_width=220
+	stage.road_width=520
 	stage["volcano_center"]=[3000,3000]
 	var total:float=TAU*(.76+(variant%3)*.06)
 	var rotation:float=variant*.65
@@ -26,7 +26,7 @@ static func build(source:Dictionary,tier:int,variant:int)->Dictionary:
 		stage.polygons.append(polygon)
 		var mid:float=(zone+.5)/count
 		stage.centers.append([3000+cos(rotation+total*mid)*(2350-1450*mid),3000+sin(rotation+total*mid)*(2350-1450*mid)])
-		stage.counts.append(20+zone*3)
+		stage.counts.append(30+zone*4)
 		stage.zones.append("화구의 지배자" if zone==count-1 else ("수문장 %d"%(zone+1) if zone in stage.miniboss_zones else "화산 능선 %d"%(zone+1)))
 
 	if theme!=0:
@@ -57,6 +57,13 @@ static func build(source:Dictionary,tier:int,variant:int)->Dictionary:
 	stage.polygons[count-1]=[[9400,2400],[10600,2400],[10600,3600],[9400,3600]]
 	stage.zones[count-1]="진 보스의 투기장"
 	stage.counts[count-1]=0
+	for zone in range(1,count-1):
+		if theme==0:continue
+		var length:=0.0
+		for j in range(1,stage.roads[zone-1].size()):
+			var a:Array=stage.roads[zone-1][j-1];var b:Array=stage.roads[zone-1][j]
+			length+=Vector2(a[0],a[1]).distance_to(Vector2(b[0],b[1]))
+		stage.counts[zone]=mini(90,maxi(stage.counts[zone],ceili(length/100.0)))
 	return stage
 
 static func route_point(theme:int,t:float)->Vector2:
@@ -80,5 +87,5 @@ static func enemy_position(stage:Dictionary,zone:int,index:int,count:int)->Vecto
 		var t:float=(zone-1+(index+.5)/count)/maxi(1,stage.centers.size()-2)
 		var p:=route_point(theme,t)
 		var tangent:Vector2=(route_point(theme,minf(1,t+.001))-route_point(theme,maxf(0,t-.001))).normalized()
-		return p+tangent.orthogonal()*float(index%3-1)*65
+		return p+tangent.orthogonal()*float(index%3-1)*150
 	return center+Vector2.from_angle(index*TAU/count)*Vector2(330,260)

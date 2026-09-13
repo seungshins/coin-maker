@@ -24,6 +24,7 @@ var action_bar: HBoxContainer
 var action_buttons: Array[Button] = []
 
 func setup(owner_game) -> void:
+	ProjectSettings.set_setting("gui/timers/tooltip_delay_sec",.12)
 	game = owner_game
 	var combat_hud:=preload("res://src/presentation/combat_hud.gd").new()
 	combat_hud.name="EdgeHUD"
@@ -134,6 +135,7 @@ func _process(_delta: float) -> void:
 			var id: String = game.profile.loadout[slot]
 			var info: Dictionary = game.rules.ability_info(id)
 			var remaining: float = game.ability_cooldowns.get(id, 0)
+			if game.rules.data.skills.has(id) and not game.rules.data.skills[id].get("summon",false) and not game.rules.data.skills[id].get("area",false):remaining=0
 			if id.begins_with("curse:"): remaining = maxf(remaining, game.curse_cd)
 			var state := ""
 			action_buttons[slot].cooldown_remaining=remaining
@@ -288,17 +290,17 @@ func show_shop() -> void:
 		for weight in weights:total+=weight
 		var odds:="현재 획득 확률 · "
 		for i in range(6):odds+=game.rules.data.rarity_names[i]+" %.2f%%  "%(weights[i]/total*100)
-		game.text_line(box,odds+"\n레벨·엔드게임 티어에 따라 상승 · 50회 보장: Lv1~19 마법+, Lv20~39 희귀+, Lv40+ 영웅+. 고등급도 필요 레벨 전까지 보관할 수 있습니다.")
+		game.text_line(box,"이번 레벨 뽑기 기회: %d / 3 · 다음 레벨에 3회로 충전 (이월 없음) · Lv100 최종 보스 처치 +1회 (최대3)\n"%int(p.get("gacha_left",3))+odds+"\n레벨·엔드게임 티어에 따라 상승 · 50회 보장: Lv1~19 마법+, Lv20~39 희귀+, Lv40+ 영웅+. 고등급도 필요 레벨 전까지 보관할 수 있습니다.")
 		var cells := grid(box, 3)
 		for kind in range(3):
 			var index := kind
-			card(cells, ("%s\n" + ("조각 %d개"%game.rules.gacha_cost(p,true) if use_shards else "%d 골드"%game.rules.gacha_cost(p)) + "\n보장까지 %d회") % [["장비 가차", "보조 젬 가차", "주스킬 가차"][kind], 50 - int(p.pity[kind])], Color("dfbe82"), func(): game.gacha(index,use_shards), (p.shards < game.rules.gacha_cost(p,true) if use_shards else p.gold < game.rules.gacha_cost(p)) or (kind == 0 and p.items.size() >= 100))
+			card(cells, ("%s\n" + ("조각 %d개"%game.rules.gacha_cost(p,true) if use_shards else "%d 골드"%game.rules.gacha_cost(p)) + "\n보장까지 %d회") % [["장비 가차", "보조 젬 가차", "주스킬 가차"][kind], 50 - int(p.pity[kind])], Color("dfbe82"), func(): game.gacha(index,use_shards), (p.shards < game.rules.gacha_cost(p,true) if use_shards else p.gold < game.rules.gacha_cost(p)) or int(p.get("gacha_left",3))<=0 or (kind == 0 and p.items.size() >= 100))
 
 		game.text_line(box,"무기 지정 가차 · 장비 가차와 비용/확률/보장 횟수 공유")
 		var weapon_cells:=grid(box,4)
 		for type in ["sword","spear","wand","bow"]:
 			var weapon:String=type
-			var entry:=card(weapon_cells,"",Color("dfbe82"),func():game.gacha(0,use_shards,weapon),(p.shards<game.rules.gacha_cost(p,true) if use_shards else p.gold<game.rules.gacha_cost(p)) or p.items.size()>=100)
+			var entry:=card(weapon_cells,"",Color("dfbe82"),func():game.gacha(0,use_shards,weapon),(p.shards<game.rules.gacha_cost(p,true) if use_shards else p.gold<game.rules.gacha_cost(p)) or p.items.size()>=100 or int(p.get("gacha_left",3))<=0)
 			iconify(entry,{"sword":"slash","spear":"spear_throw","wand":"wand","bow":"bow"}[weapon],game.rules.weapon_name(weapon)+" 가차")
 	elif game.shop_tab == 1:
 		game.text_line(box, "일반 등급 · 주스킬 150 골드 · 보조 젬 80 골드")

@@ -1,9 +1,9 @@
 # Work Status
-## Current objective
-v0.2.17 completed and published.
-## Completed
-Longer hero limbs/smaller head, continuous torso/cuirass, elbow/knee chains, hand-bound weapons, throw/sword/hammer motions; satyr horns/hooves, cyclops hair/eye; grain material. Journey enemies cover incoming roads. Layout revision rebuilds old runs while preserving rewards.
+## Objective
+Complete v0.2.18 user TODO: directions, gacha budgets, comparison, primary weapon, supports/upgrades, corridors, performance and effects.
+## Completed implementation
+Town facing Vector2 and movement facing; arrow aliases; 3 gacha/level (Lv100 final boss +1 capped3); primary weapon UI and cast restrictions, all weapons protected; quick tooltip comparison; FPS saved toggle; model template reuse/nearby staged creation; wide dense C/S roads; ten new supports with hit context; trigger selector, +10 capped skill upgrades; bowstring/casting poses; serrated wave/spin geometry and spin radius190 damage24.
 ## Verification
-22 existing tests passed, new model17 road coverage T1/6/12/16 and joints/grip tests passed. Close-up sword/spear renders inspected. PNG realism is not fully reproduced; these remain procedural models.
+23 existing tests and new v18 integration passed. UI/front-back rendered; cache creation measured13ms cold/2ms shared. Final bowstring/Lv100/trigger2slot checks included in targeted pass. Model remains procedural, not PNG-level realism.
 ## Remaining
-None for this iteration. Windows build/startup passed. Public release and all 5 asset sizes/checksums verified: https://github.com/seungshins/coin-maker/releases/tag/v0.2.17 . macOS/Linux runtime untested. Do not rerun model17/rig17/surface17 mutation scripts. Preserve original PNGs and saves.
+Final package build/smoke, commit/push and release18. Version is now0.2.18. Do not rerun todo18a/b/c/tests18 mutation scripts. Preserve assets/saves.

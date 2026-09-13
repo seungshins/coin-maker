@@ -1,6 +1,11 @@
 extends RefCounted
 
 static func ensure(p: Dictionary) -> void:
+	if not p.has("primary_weapon"):p.primary_weapon="sword"
+	if not p.has("skill_upgrades"):p.skill_upgrades={}
+	if not p.has("trigger_skills"):p.trigger_skills={}
+	if not p.has("gacha_level") or int(p.gacha_level)<int(p.level):p.gacha_level=int(p.level);p.gacha_left=3
+	if not p.has("gacha_left"):p.gacha_left=3
 	if not p.has("stash_items"): p.stash_items = []
 	if not p.has("stash_gems"): p.stash_gems = []
 	if not p.has("loadout"):

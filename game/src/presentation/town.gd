@@ -5,6 +5,7 @@ var font := SystemFont.new()
 var hero: Texture2D
 var phase := 0.0
 var direction := 1.0
+var facing:=Vector2.DOWN
 var places := [
 	{"p": Vector2(340, 310), "name": "헤르메스", "role": "시장 · 가차", "action": "shop", "color": Color("d6ac61")},
 	{"p": Vector2(890, 280), "name": "아테나의 사제", "role": "스킬 · 보조 젬", "action": "skills", "color": Color("7bbdbc")},
@@ -41,6 +42,7 @@ func _physics_process(delta: float) -> void:
 	position_in_town += move * 310 * delta
 	position_in_town = position_in_town.clamp(Vector2(100, 80), Vector2(1200, 760))
 	if move.length_squared() > 0:
+		facing=move
 		phase += delta * 12
 		if move.x != 0: direction = signf(move.x)
 	queue_redraw()

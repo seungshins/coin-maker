@@ -59,6 +59,8 @@ try {
             if ($LASTEXITCODE -ne 0) { throw "v0215 tests failed." }
             & $engine --headless --path $gamePath --script res://tests/test_homing.gd
             if ($LASTEXITCODE -ne 0) { throw "Homing tests failed." }
+            & $engine --headless --path $gamePath --script res://tests/test_v0218.gd
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
             & $engine --headless --path $gamePath --script res://tests/test_model17.gd
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
             & $engine --headless --path $gamePath --script res://tests/test_boss_patterns.gd

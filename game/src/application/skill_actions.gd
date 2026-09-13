@@ -34,6 +34,7 @@ func use_slot(slot: int) -> bool:
 		if float(game.burst_timers.get("burst:volley", 0)) > 0 and not spec.melee and not spec.get("area", false): spec.projectiles += maxi(1,roundi(3*rules.buff_scale(game.profile.level)))
 		if float(game.stolen_affixes.get("fury", 0)) > 0: spec.damage *= 1.25
 		if float(game.stolen_affixes.get("titan", 0)) > 0 and spec.melee: spec.reach *= 1.2
+		if game.mana<float(spec.get("mana",0)):game.profile.skill=original;return false
 		game.visual_weapon=rules.required_weapon(id)
 		game.attack(spec)
 		game.profile.skill = original

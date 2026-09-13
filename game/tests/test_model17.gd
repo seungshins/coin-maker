@@ -18,7 +18,7 @@ func run()->void:
 					for j in range(stage.roads[zone-1].size()):
 						var pair:Array=stage.roads[zone-1][j];var next:Array=stage.roads[zone-1][mini(j+1,stage.roads[zone-1].size()-1)];var distance:float=p.distance_to(Geometry2D.get_closest_point_to_segment(p,Vector2(pair[0],pair[1]),Vector2(next[0],next[1])))
 						if distance<closest:closest=distance;nearest_index=j
-					check(closest<110,"enemy must stay inside road width")
+					check(closest<260,"enemy must stay inside road width")
 					populated[mini(3,nearest_index/12)]=true
 				check(not populated.has(false),"C/S road must contain enemies throughout all four quarters")
 	g.enemies.clear();g.effects.clear();g.view3d.refresh(0)
@@ -32,7 +32,7 @@ func run()->void:
 		check(actor.has_node("Model/Arm1/Elbow"),"elbow articulation: "+kind)
 	var hero:Node3D=g.view3d.actors.hero
 	g.profile.items.append({"slot":0,"weapon_type":"spear","rarity":0,"value":1,"name":"spear"});g.profile.equipment[9]=g.profile.items.size()-1
-	g.visual_weapon="spear";g.attack_flash=.1;g.view3d.models.pose(hero,0,false)
+	g.profile.primary_weapon="spear";g.visual_weapon="spear";g.attack_flash=.1;g.view3d.models.pose(hero,0,false)
 	check(hero.get_node("Model/Weapon/Spear").visible,"spear uses its weapon model")
 	check(hero.get_node("Model/Weapon").global_position.distance_to(hero.get_node("Model/Arm1/Elbow/Hand").global_position)<.001,"weapon grip stays attached to hand during throw")
 	g.queue_free();await process_frame

@@ -100,6 +100,7 @@ func skill_spec(profile: Dictionary) -> Dictionary:
 	if spec.melee or spec.get("area", false): spec.reach *= 1.0 + effect_value(profile, "area") + (effect_value(profile,"insight") if "spell" in spec.tags else 0.0)
 	if "projectile" in spec.tags and effect_value(profile, "double_projectiles") > 0: spec.projectiles *= 2
 	if effect_value(profile, "giant") > 0 and spec.melee: spec.reach *= 1.3
+	preload("res://src/application/support_expansion.gd").configure(self,profile,spec)
 	return spec
 
 func weighted(rng: RandomNumberGenerator, weights: Array) -> int:
@@ -204,6 +205,7 @@ func campaign_xp(profile:Dictionary,zone:int,zones:int)->int:
 	return maxi(0,amount)
 
 func support_numbers(gem: Dictionary) -> String:
+	if gem.id in preload("res://src/application/support_expansion.gd").IDS:return preload("res://src/application/support_expansion.gd").describe(gem.id,int(gem.rarity))
 	var rarity := int(gem.rarity)
 	match gem.id:
 		"minion_guard":return "소환수 체력 +%d%% · 받는 피해 -%d%%"%[roundi((data.minion_guard_hp[rarity]-1)*100),roundi(data.minion_guard_dr[rarity]*100)]
@@ -274,6 +276,7 @@ func support_compatible(gem_id: String, skill_id: String) -> bool:
 	if not data.skills.has(skill_id): return false
 	var tags: Array = data.skills[skill_id].get("tags", [])
 	if "primary" not in tags: return false
+	if gem_id in preload("res://src/application/support_expansion.gd").IDS:return preload("res://src/application/support_expansion.gd").compatible(gem_id,tags)
 	match gem_id:
 		"minion_guard","minion_haste","minion_blast","minion_splash":return "summon" in tags
 		"fan": return "melee" in tags and not "duration" in tags
@@ -316,7 +319,7 @@ func required_weapon(id:String)->String:
 	if "spell" in data.skills[id].tags:return "wand"
 	return "sword"
 func weapon_allows(profile:Dictionary,id:String)->bool:
-	return required_weapon(id).is_empty() or weapon_index(profile,required_weapon(id))>=0
+	return required_weapon(id).is_empty() or (str(profile.get("primary_weapon",required_weapon(id)))==required_weapon(id) and weapon_index(profile,required_weapon(id))>=0)
 
 func free_attributes(profile:Dictionary)->int:return maxi(0,(int(profile.level)-1)*2-int(profile.attributes[0]+profile.attributes[1]+profile.attributes[2]))
 func allocate_attributes(profile:Dictionary,index:int,amount:int)->int:

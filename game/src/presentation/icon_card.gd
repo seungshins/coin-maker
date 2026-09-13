@@ -166,5 +166,7 @@ func _draw() -> void:
 		draw_colored_polygon(fan,Color(0,0,0,.78))
 		draw_arc(center,27,-PI/2,-PI/2+TAU*cooldown_ratio,40,Color("e3be77"),3)
 		draw_string(get_theme_font("font"),center+Vector2(-25,6),str(ceili(cooldown_remaining)),HORIZONTAL_ALIGNMENT_CENTER,50,22,Color.WHITE)
-	if row_layout:return
+	if row_layout:
+		if not badge.is_empty():draw_multiline_string(get_theme_font("font"),Vector2(53,size.y*.5-3),badge.replace(" · ","\n"),HORIZONTAL_ALIGNMENT_LEFT,size.x-57,11,2,color)
+		return
 	draw_string(get_theme_font("font"), Vector2(0, 74 if required_level>0 or not lock_reason.is_empty() else (55 if compact else 80)), badge, HORIZONTAL_ALIGNMENT_CENTER, size.x, 13, color)

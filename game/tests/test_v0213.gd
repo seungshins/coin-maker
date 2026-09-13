@@ -17,7 +17,7 @@ func run()->void:
 	p.xp=3;g.rules.death_xp(p);check(p.xp==0 and p.level==30,"no delevel")
 	check(g.rules.weapon_allows(g.profile,"slash") and not g.rules.weapon_allows(g.profile,"bow"),"legacy sword requirement")
 	for pair in [["bow","bow"],["wand","bolt"],["spear","fire_spear"],["sword","sword_wave"]]:
-		g.profile.items[0].weapon_type=pair[0]
+		g.profile.items[0].weapon_type=pair[0];g.profile.primary_weapon=pair[0]
 		check(g.rules.weapon_allows(g.profile,pair[1]),"weapon compatibility")
 	g.enemies.clear();g.spawn_enemy(g.player,0,"satyr",100,1)
 	for id in ["fire_spear","ice_spear"]:g.elemental_hit({"skill_id":id,"damage":100,"attack":1},g.enemies[0])

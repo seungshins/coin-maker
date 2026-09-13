@@ -37,9 +37,8 @@ func show_panel() -> void:
 	var columns := HBoxContainer.new()
 	columns.add_theme_constant_override("separation", 22)
 	box.add_child(columns)
-	var left := VBoxContainer.new()
-	left.custom_minimum_size = Vector2(402, 435)
-	columns.add_child(left)
+	var left_scroll:=ScrollContainer.new();left_scroll.custom_minimum_size=Vector2(402,435);left_scroll.horizontal_scroll_mode=ScrollContainer.SCROLL_MODE_DISABLED;columns.add_child(left_scroll)
+	var left := VBoxContainer.new();left.custom_minimum_size.x=390;left_scroll.add_child(left)
 	label(left, "① 장착된 키 선택 → 오른쪽에서 교체 / 보조 연결")
 	var slots: GridContainer = camp.grid(left, 3)
 	for slot in range(6):
@@ -48,17 +47,19 @@ func show_panel() -> void:
 		var info: Dictionary = game.rules.ability_info(id)
 		var rank:int=game.rules.skill_rank(p,id) if game.rules.data.skills.has(id) else 0
 		var entry: Button = camp.card(slots, "", game.rarity_color(maxi(0,rank)), func(): select_slot(index))
-		entry.custom_minimum_size.x = 124
+		entry.compact=true;entry.row_layout=true
+		entry.custom_minimum_size = Vector2(124,54)
 		camp.iconify(entry, id if not id.is_empty() else "empty", game.controls.slot_label(slot) + " · "+(game.rules.data.rarity_names[rank] if rank>=0 else "잠김") + (" ✓" if slot == camp.selected_slot else ""))
+		entry.custom_minimum_size.y=54
 		entry.tooltip_text = str(info.get("name", "빈 슬롯")) + " · "+(game.rules.data.rarity_names[rank] if rank>=0 else "레벨 부족")+ "\n" + str(info.get("description", "오른쪽 목록에서 스킬을 배치하세요."))
 		if game.rules.data.skills.has(id) and not game.rules.weapon_allows(p,id):
 			entry.lock_reason="필요: "+game.rules.weapon_name(game.rules.required_weapon(id))
-			entry.custom_minimum_size.y=92
+			entry.custom_minimum_size.y=54
 	var clear: Button = game.button(left, "선택한 키 슬롯 비우기", func():
 		if game.actions.assign(camp.selected_slot, ""): category = 0; show_panel())
 	clear.custom_minimum_size.y = 30
 	label(left, "② " + (game.rules.data.skills[selected].name + " · 보조 연결" if primary else "주스킬을 장착한 키에서 보조 연결 가능"))
-	var links: GridContainer = camp.grid(left, 2)
+	var links: GridContainer = camp.grid(left, 3)
 	for slot in range(6):
 		var index := slot
 		var unlocked: bool = primary and slot < game.rules.slots(p)
@@ -71,13 +72,13 @@ func show_panel() -> void:
 			tooltip = text + "\n" + game.rules.support_numbers(gem)
 		else: text += "빈 연결"
 		var link: Button = camp.card(links, text + (" ✓" if camp.selected_support == slot else ""), Color("9bd5cc"), func(): camp.selected_support = index; category = 4; show_panel(), not unlocked)
-		link.set("compact",true)
+		link.set("compact",true);link.row_layout=true
 		var gem_id:String="empty"
 		if unlocked and slot<p.supports.size():
 			gem_id=str(p.gems[int(p.supports[slot])].id)
 			link.set("ink",game.rarity_color(int(p.gems[int(p.supports[slot])].rarity)))
 		camp.iconify(link,gem_id,text)
-		link.custom_minimum_size = Vector2(191, 60)
+		link.custom_minimum_size = Vector2(124, 44)
 		link.tooltip_text = tooltip
 	var unlink: Button = game.button(left, "선택한 보조 연결 비우기", func(): game.clear_support_link(camp.selected_support), not primary or camp.selected_support >= p.supports.size())
 	unlink.custom_minimum_size.y = 30
@@ -88,6 +89,22 @@ func show_panel() -> void:
 		if game.commit(next):show_panel(),not primary or p.supports.is_empty())
 	unlink_all.custom_minimum_size.y=30
 	if primary:
+		var upgrade:int=p.skill_upgrades.get(selected,0)
+		label(left,"스킬 강화 +%d / 10 · 단계당 피해 +2%%"%upgrade)
+		var upgrades:=HBoxContainer.new();left.add_child(upgrades)
+		game.button(upgrades,"강화 %d 골드"%((upgrade+1)*100),func():upgrade_skill(selected,false),upgrade>=10 or p.gold<(upgrade+1)*100)
+		game.button(upgrades,"강화 %d 조각"%((upgrade+1)*5),func():upgrade_skill(selected,true),upgrade>=10 or p.shards<(upgrade+1)*5)
+		if p.supports.any(func(i):return p.gems[int(i)].id=="trigger"):
+			label(left,"운명의 연쇄 · 발동할 주스킬 (보조+발동 대상 총 2칸 사용)")
+			var targets:=OptionButton.new();targets.add_item("연결 없음");var ids:Array=[""]
+			for id in p.skills:
+				if id==selected or game.rules.skill_rank(p,id)<0:continue
+				ids.append(id);targets.add_item(game.rules.data.skills[id].name)
+			targets.select(maxi(0,ids.find(p.trigger_skills.get(selected,""))))
+			targets.item_selected.connect(func(i):
+				var next:Dictionary=p.duplicate(true);next.trigger_skills[selected]=ids[i]
+				if game.commit(next):show_panel())
+			left.add_child(targets)
 		var spec: Dictionary = game.rules.skill_spec(p)
 		label(left, "피해 %.1f · 간격 %.2f초 · 투사체 %d" % [spec.damage, spec.interval, spec.projectiles])
 	var right := VBoxContainer.new()
@@ -185,3 +202,10 @@ func restore_list(scroll: ScrollContainer, offset: int) -> void:
 	await camp.get_tree().process_frame
 	await camp.get_tree().process_frame
 	if is_instance_valid(scroll) and scroll == list_scroll: scroll.scroll_vertical = offset
+
+func upgrade_skill(id:String,shards:bool)->void:
+	var next:Dictionary=game.profile.duplicate(true);var level:int=next.skill_upgrades.get(id,0)
+	var currency:String="shards" if shards else "gold";var cost:int=(level+1)*(5 if shards else 100)
+	if level>=10 or int(next[currency])<cost:return
+	next[currency]-=cost;next.skill_upgrades[id]=level+1
+	if game.commit(next):show_panel()

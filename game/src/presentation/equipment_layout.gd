@@ -11,6 +11,7 @@ func tile(parent:Node,item:Dictionary,callback:Callable,selected:bool=false)->Bu
 	b.ink=game.rarity_color(int(item.rarity))
 	b.equipped=selected
 	b.tooltip_text=camp.item_details(item)
+	if not selected:b.tooltip_text+=comparison(item)
 	b.add_theme_stylebox_override("normal",camp.style(Color("0b1320"),b.ink.darkened(.25)))
 	b.add_theme_stylebox_override("hover",camp.style(Color("24313e"),b.ink))
 	b.pressed.connect(callback)
@@ -33,6 +34,12 @@ func paperdoll(box:VBoxContainer)->void:
 			if game.commit(next):camp.show_inventory(),index>=0)
 		cell.position=positions[slot];cell.size=Vector2(72,82);cell.disabled=index<0
 		cell.tooltip_text=game.rules.slot_name(slot)+" · 빈 슬롯" if index<0 else camp.item_details(item)
+	var choices:=HBoxContainer.new();left.add_child(choices)
+	for type in ["sword","spear","wand","bow"]:
+		var weapon:String=type
+		game.button(choices,game.rules.weapon_name(weapon)+(" · 주 무기" if game.profile.get("primary_weapon","sword")==weapon else ""),func():
+			var next:Dictionary=game.profile.duplicate(true);next.primary_weapon=weapon
+			if game.commit(next):camp.show_inventory(),game.rules.weapon_index(game.profile,weapon)<0)
 	var stats:Dictionary=game.rules.stats(game.profile)
 	camp.attribute_label(left,"전체 효과 · 선택 스킬 무기 피해 +%.1f\n최대 체력 %.0f · 방어도 %.0f (피해 감소 %.1f%%)\n공격·시전 속도 ×%.2f · 이동 %.0f"%[stats.damage,stats.hp,stats.armor,stats.armor_reduction*100,stats.speed,stats.move])
 	var panel:=PanelContainer.new();panel.custom_minimum_size.x=310;panel.size_flags_horizontal=Control.SIZE_EXPAND_FILL;panel.add_theme_stylebox_override("panel",camp.style(Color("15171e"),Color("766448")));row.add_child(panel)
@@ -75,3 +82,14 @@ func bag(parent:Node,entries:Array,deposit:bool=true,stash:bool=false)->void:
 		board.draw_rect(Rect2(Vector2.ZERO,board.size),Color("090e13"))
 		for x in range(columns+1): board.draw_line(Vector2(x*52,0),Vector2(x*52,board.size.y),Color("443e30"))
 		for y in range(rows+1): board.draw_line(Vector2(0,y*52),Vector2(board.size.x,y*52),Color("443e30")))
+
+func comparison(item:Dictionary)->String:
+	var result:="\n──────── 장착 장비 비교 ────────"
+	var slots:Array=[game.rules.equip_slot(game.profile,item)]
+	if int(item.slot) in [6,7]:slots=[6,7]
+	for slot in slots:
+		var index:int=game.profile.equipment[slot]
+		if index<0:result+="\n"+game.rules.slot_name(slot)+": 빈 슬롯";continue
+		var old:Dictionary=game.profile.items[index]
+		result+="\n"+camp.item_details(old)+"\n기본 수치 차이: %+.1f"%(game.rules.item_value(item)-game.rules.item_value(old))
+	return result

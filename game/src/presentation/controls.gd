@@ -20,7 +20,10 @@ func key(original:int)->int:return int(mapping.get(original,original))
 func label(original:int)->String:return OS.get_keycode_string(key(original))
 func slot_label(slot:int)->String:return ["좌클릭","우클릭"][slot] if slot<2 else label(KEYS[7+slot-2])
 func matches(event:InputEventKey,original:int)->bool:return (event.physical_keycode if event.physical_keycode!=0 else event.keycode)==key(original)
-func pressed(original:int)->bool:return Input.is_physical_key_pressed(key(original))
+func pressed(original:int)->bool:
+	if Input.is_physical_key_pressed(key(original)):return true
+	var arrows:Dictionary={KEY_W:KEY_UP,KEY_A:KEY_LEFT,KEY_S:KEY_DOWN,KEY_D:KEY_RIGHT}
+	return key(original)==original and arrows.has(original) and Input.is_physical_key_pressed(arrows[original])
 func save()->void:
 	var cfg:=ConfigFile.new()
 	for original in KEYS:cfg.set_value("keys",str(original),key(original))

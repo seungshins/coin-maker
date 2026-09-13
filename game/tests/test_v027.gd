@@ -10,6 +10,8 @@ func run() -> void:
 	game.set_physics_process(false)
 	game.profile = game.rules.new_profile()
 	game.start_run()
+	for enemy in game.enemies:enemy.p=game.player+Vector2(120,0)
+	for i in range(game.enemies.size()):game.view3d.refresh(0)
 	game.view3d.refresh(0)
 	check(game.view3d.actors.hero.has_node("Model"), "directional hero geometry")
 	check(is_equal_approx(game.view3d.camera.size,12*game.display_settings.zoom_factor), "wide field camera")
