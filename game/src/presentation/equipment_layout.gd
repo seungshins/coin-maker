@@ -11,7 +11,7 @@ func tile(parent:Node,item:Dictionary,callback:Callable,selected:bool=false)->Bu
 	b.ink=game.rarity_color(int(item.rarity))
 	b.equipped=selected
 	b.tooltip_text=camp.item_details(item)
-	if not selected:b.tooltip_text+=comparison(item)
+	if not selected:b.comparison_cards=["현재 장비\n"+comparison(item),"인벤토리 장비\n"+camp.item_details(item)]
 	b.add_theme_stylebox_override("normal",camp.style(Color("0b1320"),b.ink.darkened(.25)))
 	b.add_theme_stylebox_override("hover",camp.style(Color("24313e"),b.ink))
 	b.pressed.connect(callback)
@@ -19,6 +19,7 @@ func tile(parent:Node,item:Dictionary,callback:Callable,selected:bool=false)->Bu
 	return b
 
 func paperdoll(box:VBoxContainer)->void:
+	weapon_selector(box)
 	var row:=HBoxContainer.new();row.add_theme_constant_override("separation",16);box.add_child(row)
 	var equipment:=PanelContainer.new();equipment.custom_minimum_size.x=530;equipment.add_theme_stylebox_override("panel",camp.style(Color("10171d"),Color("766448")));row.add_child(equipment)
 	var left:=VBoxContainer.new();equipment.add_child(left)
@@ -34,12 +35,6 @@ func paperdoll(box:VBoxContainer)->void:
 			if game.commit(next):camp.show_inventory(),index>=0)
 		cell.position=positions[slot];cell.size=Vector2(72,82);cell.disabled=index<0
 		cell.tooltip_text=game.rules.slot_name(slot)+" · 빈 슬롯" if index<0 else camp.item_details(item)
-	var choices:=HBoxContainer.new();left.add_child(choices)
-	for type in ["sword","spear","wand","bow"]:
-		var weapon:String=type
-		game.button(choices,game.rules.weapon_name(weapon)+(" · 주 무기" if game.profile.get("primary_weapon","sword")==weapon else ""),func():
-			var next:Dictionary=game.profile.duplicate(true);next.primary_weapon=weapon
-			if game.commit(next):camp.show_inventory(),game.rules.weapon_index(game.profile,weapon)<0)
 	var stats:Dictionary=game.rules.stats(game.profile)
 	camp.attribute_label(left,"전체 효과 · 선택 스킬 무기 피해 +%.1f\n최대 체력 %.0f · 방어도 %.0f (피해 감소 %.1f%%)\n공격·시전 속도 ×%.2f · 이동 %.0f"%[stats.damage,stats.hp,stats.armor,stats.armor_reduction*100,stats.speed,stats.move])
 	var panel:=PanelContainer.new();panel.custom_minimum_size.x=310;panel.size_flags_horizontal=Control.SIZE_EXPAND_FILL;panel.add_theme_stylebox_override("panel",camp.style(Color("15171e"),Color("766448")));row.add_child(panel)
@@ -84,7 +79,7 @@ func bag(parent:Node,entries:Array,deposit:bool=true,stash:bool=false)->void:
 		for y in range(rows+1): board.draw_line(Vector2(0,y*52),Vector2(board.size.x,y*52),Color("443e30")))
 
 func comparison(item:Dictionary)->String:
-	var result:="\n──────── 장착 장비 비교 ────────"
+	var result:=""
 	var slots:Array=[game.rules.equip_slot(game.profile,item)]
 	if int(item.slot) in [6,7]:slots=[6,7]
 	for slot in slots:
@@ -93,3 +88,16 @@ func comparison(item:Dictionary)->String:
 		var old:Dictionary=game.profile.items[index]
 		result+="\n"+camp.item_details(old)+"\n기본 수치 차이: %+.1f"%(game.rules.item_value(item)-game.rules.item_value(old))
 	return result
+
+func weapon_selector(box:VBoxContainer)->void:
+	camp.attribute_label(box,"주 무기 선택 · 아래 아이콘을 클릭하면 사용 가능한 스킬이 바뀝니다")
+	var choices:=HBoxContainer.new();box.add_child(choices)
+	for type in ["sword","spear","wand","bow"]:
+		var weapon:String=type;var owned:bool=game.rules.weapon_index(game.profile,weapon)>=0
+		var selected:bool=game.profile.get("primary_weapon","sword")==weapon
+		var card:Button=camp.card(choices,"",Color("f3cf77") if selected else Color("8b9baa"),func():
+			var next:Dictionary=game.profile.duplicate(true);next.primary_weapon=weapon
+			if game.commit(next):camp.show_inventory(),not owned)
+		camp.iconify(card,{"sword":"slash","spear":"spear_throw","wand":"wand","bow":"bow"}[weapon],game.rules.weapon_name(weapon)+(" · 선택됨" if selected else (" · 선택" if owned else " · 미장착")))
+		card.custom_minimum_size=Vector2(190,92)
+		card.tooltip_text="이 무기를 주 무기로 선택하면 해당 무기 스킬을 사용할 수 있습니다. 다른 장착 무기는 판매에서 보호됩니다." if owned else "가방에서 이 종류의 무기를 먼저 장착하세요. 헤르메스 시장에서 구매할 수도 있습니다."

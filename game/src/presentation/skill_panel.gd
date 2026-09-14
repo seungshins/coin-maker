@@ -33,6 +33,7 @@ func show_panel() -> void:
 	var primary: bool = game.rules.data.skills.has(selected)
 	if primary: p.skill = selected; Storage.ensure(p)
 	var box: VBoxContainer = camp.begin("아테나의 전당 · 스킬과 보조 젬", "")
+	game.button(box,"주 무기: "+game.rules.weapon_name(p.get("primary_weapon","sword"))+" · 장비창에서 변경",camp.show_inventory)
 	game.button(box,"권능 도감 · 미획득 스킬과 고유 장비",camp.show_codex)
 	var columns := HBoxContainer.new()
 	columns.add_theme_constant_override("separation", 22)
@@ -53,19 +54,28 @@ func show_panel() -> void:
 		entry.custom_minimum_size.y=54
 		entry.tooltip_text = str(info.get("name", "빈 슬롯")) + " · "+(game.rules.data.rarity_names[rank] if rank>=0 else "레벨 부족")+ "\n" + str(info.get("description", "오른쪽 목록에서 스킬을 배치하세요."))
 		if game.rules.data.skills.has(id) and not game.rules.weapon_allows(p,id):
-			entry.lock_reason="필요: "+game.rules.weapon_name(game.rules.required_weapon(id))
+			entry.lock_reason="주 무기: "+game.rules.weapon_name(game.rules.required_weapon(id))
 			entry.custom_minimum_size.y=54
 	var clear: Button = game.button(left, "선택한 키 슬롯 비우기", func():
 		if game.actions.assign(camp.selected_slot, ""): category = 0; show_panel())
 	clear.custom_minimum_size.y = 30
 	label(left, "② " + (game.rules.data.skills[selected].name + " · 보조 연결" if primary else "주스킬을 장착한 키에서 보조 연결 가능"))
+	var has_trigger:bool=primary and p.supports.any(func(i):return p.gems[int(i)].id=="trigger")
+	if has_trigger:
+		var target:String=p.trigger_skills.get(selected,"")
+		var trigger_card:Button=camp.card(left,"",Color("d0a0ff"),func():show_trigger_picker(selected))
+		trigger_card.compact=true;trigger_card.row_layout=true
+		camp.iconify(trigger_card,target if not target.is_empty() else "empty","주 1 · "+(game.rules.data.skills[target].name if game.rules.data.skills.has(target) else "클릭하여 발동 주스킬 선택"))
+		trigger_card.tooltip_text="운명의 연쇄 명중 시 발동할 주스킬 · 무기 제한 없이 선택 · 마지막 열린 보조 칸을 사용합니다."
 	var links: GridContainer = camp.grid(left, 3)
 	for slot in range(6):
 		var index := slot
-		var unlocked: bool = primary and slot < game.rules.slots(p)
+		var reserved:bool=has_trigger and slot==game.rules.slots(p)-1
+		var unlocked: bool = primary and slot < game.rules.slots(p) and not reserved
 		var text := "보조 %d · " % (slot + 1)
 		var tooltip := "주스킬 전용 보조 연결"
-		if not unlocked: text += "Lv.%d" % [1, 5, 15, 30, 60, 85][slot] if primary else "주스킬 전용"
+		if reserved:text+="주 1 사용 중"
+		elif not unlocked: text += "Lv.%d" % [1, 5, 15, 30, 60, 85][slot] if primary else "주스킬 전용"
 		elif slot < p.supports.size():
 			var gem: Dictionary = p.gems[int(p.supports[slot])]
 			text += game.rules.data.supports[gem.id].name
@@ -94,17 +104,6 @@ func show_panel() -> void:
 		var upgrades:=HBoxContainer.new();left.add_child(upgrades)
 		game.button(upgrades,"강화 %d 골드"%((upgrade+1)*100),func():upgrade_skill(selected,false),upgrade>=10 or p.gold<(upgrade+1)*100)
 		game.button(upgrades,"강화 %d 조각"%((upgrade+1)*5),func():upgrade_skill(selected,true),upgrade>=10 or p.shards<(upgrade+1)*5)
-		if p.supports.any(func(i):return p.gems[int(i)].id=="trigger"):
-			label(left,"운명의 연쇄 · 발동할 주스킬 (보조+발동 대상 총 2칸 사용)")
-			var targets:=OptionButton.new();targets.add_item("연결 없음");var ids:Array=[""]
-			for id in p.skills:
-				if id==selected or game.rules.skill_rank(p,id)<0:continue
-				ids.append(id);targets.add_item(game.rules.data.skills[id].name)
-			targets.select(maxi(0,ids.find(p.trigger_skills.get(selected,""))))
-			targets.item_selected.connect(func(i):
-				var next:Dictionary=p.duplicate(true);next.trigger_skills[selected]=ids[i]
-				if game.commit(next):show_panel())
-			left.add_child(targets)
 		var spec: Dictionary = game.rules.skill_spec(p)
 		label(left, "피해 %.1f · 간격 %.2f초 · 투사체 %d" % [spec.damage, spec.interval, spec.projectiles])
 	var right := VBoxContainer.new()
@@ -190,10 +189,10 @@ func show_panel() -> void:
 				entry.custom_minimum_size.y=82
 				entry.add_theme_stylebox_override("disabled",camp.style(Color("302024"),Color("de937c")))
 			if category==0 and not game.rules.weapon_allows(p,id):
-				entry.lock_reason="필요: "+game.rules.weapon_name(game.rules.required_weapon(id))
+				entry.lock_reason="주 무기: "+game.rules.weapon_name(game.rules.required_weapon(id))
 				entry.custom_minimum_size.y=82
 				entry.add_theme_stylebox_override("disabled",camp.style(Color("302024"),Color("de937c")))
-			entry.tooltip_text = ("필요 무기: "+game.rules.weapon_name(game.rules.required_weapon(id))+"\n" if category==0 else "")+info.name + " · "+game.rules.data.rarity_names[rarity]+"\n" + info.description + "\n필요 Lv.%d · 선택한 키에 장착"%game.rules.gem_level(rarity)
+			entry.tooltip_text = ("필요 무기: "+game.rules.weapon_name(game.rules.required_weapon(id))+"\n" if category==0 else "")+info.name + " · "+game.rules.data.rarity_names[rarity]+"\n" + info.description + ("\n사용하려면 위의 주 무기 변경 버튼 → 장비창 상단에서 해당 무기 카드를 선택하세요." if category==0 and not game.rules.weapon_allows(p,id) else "") + "\n필요 Lv.%d · 선택한 키에 장착"%game.rules.gem_level(rarity)
 	displayed_category = category
 	restore_list(list_scroll, int(scroll_positions.get(category, 0)))
 	game.button(box, "마을로 돌아가기", game.show_hub)
@@ -208,4 +207,20 @@ func upgrade_skill(id:String,shards:bool)->void:
 	var currency:String="shards" if shards else "gold";var cost:int=(level+1)*(5 if shards else 100)
 	if level>=10 or int(next[currency])<cost:return
 	next[currency]-=cost;next.skill_upgrades[id]=level+1
+	if game.commit(next):show_panel()
+
+func show_trigger_picker(source:String)->void:
+	var box:VBoxContainer=camp.begin("주 1 · 운명의 연쇄 발동 스킬","보유한 주스킬을 선택하세요. 주 무기 제한은 적용하지 않으며, 마지막 열린 보조 칸을 사용합니다.")
+	game.button(box,"주 1 비우기",func():set_trigger(source,""))
+	var cards:GridContainer=camp.grid(box,5)
+	for id in game.profile.skills:
+		if id==source:continue
+		var target:String=id;var rank:int=game.rules.skill_rank(game.profile,target)
+		var card:Button=camp.card(cards,"",game.rarity_color(maxi(0,rank)),func():set_trigger(source,target),rank<0)
+		camp.iconify(card,target,game.rules.data.skills[target].name)
+		card.tooltip_text=game.rules.data.skills[target].description+"\n"+("레벨 부족" if rank<0 else "클릭하여 주 1에 연결")
+	game.button(box,"돌아가기",show_panel)
+func set_trigger(source:String,target:String)->void:
+	if not target.is_empty() and (target==source or target not in game.profile.skills or game.rules.skill_rank(game.profile,target)<0):return
+	var next:Dictionary=game.profile.duplicate(true);next.trigger_skills[source]=target
 	if game.commit(next):show_panel()

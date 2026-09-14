@@ -129,7 +129,7 @@ func pose(parent:Node3D,phase:float,spin:bool)->void:
 		var leg:Node3D=body.get_node("LeftLeg" if side<0 else "RightLeg")
 		leg.rotation.x=stride*.55
 		leg.get_node("Knee").rotation.x=maxf(0,-stride)*.7
-		body.get_node("Arm%d"%side).rotation.x=-stride*.32
+		body.get_node("Arm%d"%side).rotation=Vector3(-stride*.32,0,side*.12)
 		body.get_node("Arm%d/Elbow"%side).rotation.x=-.22-maxf(0,stride)*.35
 	var weapon:Node3D=body.get_node("Weapon")
 	weapon.rotation.y=sin(view.game.attack_flash*12)*1.3
@@ -140,13 +140,13 @@ func pose(parent:Node3D,phase:float,spin:bool)->void:
 	weapon.get_node("Spear").visible=spear
 	weapon.get_node("Blade").visible=type=="sword"
 	weapon.get_node("Wand").visible=type=="wand"
-	var attack:float=sin(clampf(view.game.attack_flash/.22,0,1)*PI)
+	var attack:float=sin(clampf(view.game.attack_flash/.22,0,1)*PI) if view.game.mode=="play" else 0.0
 	body.get_node("Arm1").rotation.x-=attack*.8
 	body.rotation.y=attack*-.28
 	body.get_node("Cape").rotation.x=sin(view.clock*4)*.025+absf(sin(phase))*.06
 	body.get_node("Arm1/Elbow").rotation.x-=attack*.7
 	weapon.position.z=.12+attack*(.3 if spear else .1)
-	if bow: body.get_node("Arm-1").rotation.x=-.8;body.get_node("Arm1").rotation.x=-.4-attack*.5
+	
 	# Overarm throw and diagonal sword cut use the shoulder and elbow chain.
 	var right:Node3D=body.get_node("Arm1");var elbow:Node3D=right.get_node("Elbow")
 	right.rotation.z=0;right.rotation.y=0
@@ -159,7 +159,7 @@ func pose(parent:Node3D,phase:float,spin:bool)->void:
 			right.rotation.x=lerpf(-1.8,-.5,progress);right.rotation.z=lerpf(-.9,.7,progress)
 			right.rotation.y=lerpf(-.6,.8,progress);elbow.rotation.x=-.35
 	preload("res://src/presentation/anatomy.gd").new(view).attach_weapon(body)
-	if bow:
+	if bow and attack>0:
 		# Bow hand extends while the drawing elbow pulls the string toward the cheek.
 		right.rotation.x=-1.3;elbow.rotation.x=-.12
 		body.get_node("Arm-1").rotation.x=-1.1-attack*.45
@@ -171,7 +171,7 @@ func pose(parent:Node3D,phase:float,spin:bool)->void:
 	elif type=="wand" and attack>0:
 		for side in [-1,1]:
 			body.get_node("Arm%d"%side).rotation.x=-1.05
-			body.get_node("Arm%d"%side).rotation.z=side*-.35
+			body.get_node("Arm%d"%side).rotation.z=side*-.08
 			body.get_node("Arm%d/Elbow"%side).rotation.x=-.7-attack*.4
 		preload("res://src/presentation/anatomy.gd").new(view).attach_weapon(body)
 	if spin: parent.rotation.y=view.clock*18

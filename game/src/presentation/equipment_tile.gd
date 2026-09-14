@@ -1,4 +1,5 @@
 extends "res://src/presentation/icon_card.gd"
+var comparison_cards:Array=[]
 var slot := 0
 var weapon_type:="sword"
 var equipped := false
@@ -51,3 +52,11 @@ func _draw() -> void:
 		draw_circle(c,6,color)
 	if slot>0:draw_string(get_theme_font("font"),Vector2(2,size.y-5),["","흉갑","유물","투구","장갑","신발","반지","반지","목걸이"][slot],HORIZONTAL_ALIGNMENT_CENTER,size.x-4,11,color)
 	if equipped: draw_string(get_theme_font("font"),Vector2(4,17),"장착",HORIZONTAL_ALIGNMENT_LEFT,-1,12,color)
+
+func _make_custom_tooltip(for_text:String)->Object:
+	if comparison_cards.is_empty():return super._make_custom_tooltip(for_text)
+	var row:=HBoxContainer.new();row.add_theme_constant_override("separation",12)
+	for text in comparison_cards:
+		var card:=PanelContainer.new();var border:=StyleBoxFlat.new();border.bg_color=Color("0b131d");border.border_color=ink;border.set_border_width_all(2);border.set_content_margin_all(14);card.add_theme_stylebox_override("panel",border)
+		var label:=Label.new();label.text=text;label.custom_minimum_size.x=280;label.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART;label.add_theme_font_size_override("font_size",16);label.add_theme_color_override("font_color",Color("fff0d2"));card.add_child(label);row.add_child(card)
+	return row
