@@ -82,6 +82,7 @@ var chest_events=preload("res://src/application/chests.gd").new(self)
 var display_settings
 
 func _ready() -> void:
+	Input.use_accumulated_input=false
 	controls=preload("res://src/presentation/controls.gd").new(self)
 	display_settings=preload("res://src/presentation/display_settings.gd").new(self)
 

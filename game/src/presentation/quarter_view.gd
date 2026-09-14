@@ -11,6 +11,8 @@ var actor_templates:Dictionary={}
 var actor_materials:Dictionary={}
 var anatomy=preload("res://src/presentation/anatomy.gd").new(self)
 var loading_models:=false
+var slash_shader:Shader
+var slash_mesh:ArrayMesh
 var ornaments := {}
 var materials := {}
 var character_textures := {}
@@ -460,16 +462,19 @@ func draw_effect(fx: Dictionary, i: int) -> void:
 		blade.scale=Vector3(1,1.5 if game.visual_weapon=="spear" else 1,1)
 		var key_:String=key+"blade_arc"
 		if not ornaments.has(key_):
-			var ribbon:=SurfaceTool.new()
-			ribbon.begin(Mesh.PRIMITIVE_TRIANGLES)
-			for step in range(36):
-				var a:float=float(step)/36*TAU
-				var b:float=float(step+1)/36*TAU
-				for v in [Vector3(cos(a)*.82,0,sin(a)*.82),Vector3(cos(a)*(1.1 if step%3==0 else 1),.08,sin(a)*(1.1 if step%3==0 else 1)),Vector3(cos(b)*(1.1 if step%3==0 else 1),-.04,sin(b)*(1.1 if step%3==0 else 1)),Vector3(cos(a)*.82,0,sin(a)*.82),Vector3(cos(b),0,sin(b)),Vector3(cos(b)*.82,0,sin(b)*.82)]: ribbon.add_vertex(v)
-			ribbon.generate_normals()
-			var arc_node:=mesh(self,ribbon.commit(),Vector3.ZERO,Color("fff1c8"))
-			var shader:=Shader.new()
-			shader.code="shader_type spatial; render_mode unshaded,cull_disabled,blend_add; uniform float sweep=2.6; uniform float fade=1.0; varying vec3 pos; void vertex(){pos=VERTEX;} void fragment(){float angle=atan(pos.z,pos.x); float a=1.0-smoothstep(sweep*.4,sweep*.5,abs(angle)); ALBEDO=vec3(1.0,.85,.55); ALPHA=a*fade;}"
+			if slash_mesh==null:
+				var ribbon:=SurfaceTool.new()
+				ribbon.begin(Mesh.PRIMITIVE_TRIANGLES)
+				for step in range(36):
+					var a:float=float(step)/36*TAU
+					var b:float=float(step+1)/36*TAU
+					for v in [Vector3(cos(a)*.82,0,sin(a)*.82),Vector3(cos(a)*(1.1 if step%3==0 else 1),.08,sin(a)*(1.1 if step%3==0 else 1)),Vector3(cos(b)*(1.1 if step%3==0 else 1),-.04,sin(b)*(1.1 if step%3==0 else 1)),Vector3(cos(a)*.82,0,sin(a)*.82),Vector3(cos(b),0,sin(b)),Vector3(cos(b)*.82,0,sin(b)*.82)]: ribbon.add_vertex(v)
+				ribbon.generate_normals()
+				slash_mesh=ribbon.commit()
+			var arc_node:=mesh(self,slash_mesh,Vector3.ZERO,Color("fff1c8"))
+			if slash_shader==null:slash_shader=Shader.new()
+			var shader:Shader=slash_shader
+			if shader.code.is_empty():shader.code="shader_type spatial; render_mode unshaded,cull_disabled,blend_add; uniform float sweep=2.6; uniform float fade=1.0; varying vec3 pos; void vertex(){pos=VERTEX;} void fragment(){float angle=atan(pos.z,pos.x); float a=1.0-smoothstep(sweep*.4,sweep*.5,abs(angle)); ALBEDO=vec3(1.0,.85,.55); ALPHA=a*fade;}"
 			var sm:=ShaderMaterial.new()
 			sm.shader=shader
 			arc_node.material_override=sm
@@ -786,6 +791,14 @@ func prepare_encounter()->void:
 			var enemy:=actor("enemy%d"%e.id,Color.WHITE,e.kind=="boss",e.model);enemy.position=point(e.p)
 			label.text="섬에 상륙하는 중 · 주변 전투 준비"
 			await RenderingServer.frame_post_draw
+	label.text="섬에 상륙하는 중 · 무기와 마법 준비"
+	for element in ["fire","ice","water","poison","lightning"]:
+		elements.draw("warm_"+element,point(game.player,.8),element,Vector2(.5,1))
+		await RenderingServer.frame_post_draw
+	for index in range(8):
+		draw_effect({"kind":"slash","p":game.player,"life":.2,"radius":120,"arc":150,"angle":0},index)
+		sword_arc(index,{"p":game.player,"v":Vector2.RIGHT})
+		await RenderingServer.frame_post_draw
 	refresh(0)
 	await get_tree().process_frame
 	loading_layer.queue_free();loading_models=false;set_process(true)
