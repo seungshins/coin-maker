@@ -6,6 +6,7 @@ static func build(source:Dictionary,tier:int,variant:int)->Dictionary:
 	stage.layout_revision=int(source.get("layout_revision",0))+1500+tier
 	var theme:int=variant%6
 	stage["journey_theme"]=theme
+	if variant%3==1:stage.boss_model="empusa"
 	stage.name=str(source.name)+" · "+["화산 능선","굽이진 계곡","초승달 해안","십자 신전","트로이 성곽","해상 잔해"][theme]+" T%d"%tier
 	stage["journey"]=true
 	stage["miniboss_zones"]=[1,3,5] if tier>=12 else ([2] if tier>=6 else [])

@@ -3,8 +3,9 @@ var game
 func _init(g)->void:game=g
 func prepare(e:Dictionary,focus:Vector2)->void:
 	var index:int=int(e.get("pattern",0));e.pattern=index+1
-	var caster:bool=e.get("model","")=="gorgon"
+	var caster:bool=e.get("model","")in ["gorgon","empusa"]
 	e.boss_attack=("gaze" if index%2 else "poison_fan") if caster else ("sweep" if index%2 else "slam")
+	if e.get("model","")=="empusa":e.boss_attack="slam" if index%2 else "flame_fan"
 	e.attack_origin=e.p;e.target=focus;e.attack_dir=(focus-e.p).normalized()
 	if e.attack_dir==Vector2.ZERO:e.attack_dir=Vector2.RIGHT
 	e.windup=1.5 if caster else (1.15 if e.boss_attack=="slam" else 1.3)
@@ -31,14 +32,14 @@ func update(e:Dictionary,delta:float,focus:Vector2)->void:
 			if game.can_move(p):e.p=p;break
 func strike(e:Dictionary)->void:
 	var damage:float=35*game.difficulty().damage*game.enemy_damage_rate(e)
-	if e.boss_attack=="poison_fan":
-		for i in range(5):game.bolts.append({"p":e.p,"v":e.attack_dir.rotated((i-2)*.22)*245,"life":2.3,"damage":damage*.6,"friendly":false,"attack":-1,"skill_id":"venom"})
+	if e.boss_attack in ["poison_fan","flame_fan"]:
+		for i in range(5):game.bolts.append({"p":e.p,"v":e.attack_dir.rotated((i-2)*.22)*245,"life":2.3,"damage":damage*.6,"friendly":false,"attack":-1,"skill_id":"fire_arrow" if e.boss_attack=="flame_fan" else "venom"})
 		game.combat_audio.play_effect("curse");return
 	if contains(e,game.player):
 		game.hurt(damage*(1.15 if e.boss_attack=="slam" else .9))
 		if e.boss_attack=="gaze" and game.dodge<=0:
 			game.petrify_time=2.5;game.notify("석화 · 2.5초 동안 이동 속도 45% 감소")
 	for m in game.minions:
-		if contains(e,m.p):m.hp-=damage*(1.0-float(m.get("dr",0)))
+		if contains(e,m.p):game.battle_extras.minion_combat.receive_damage(m,damage)
 	game.effects.append({"kind":"slash" if e.boss_attack=="sweep" else "curse","p":e.p if e.boss_attack=="sweep" else e.target,"radius":220 if e.boss_attack=="sweep" else 110,"arc":140,"angle":e.attack_dir.angle(),"life":.35})
 	game.combat_audio.play_effect("thunder" if e.boss_attack=="slam" else "curse")

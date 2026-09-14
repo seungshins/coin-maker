@@ -48,11 +48,11 @@ func enemy_strike(e: Dictionary, damage: float) -> void:
 	var radius := 115.0 if e.kind == "boss" else 58.0
 	if game.player.distance_to(e.target) < radius: game.hurt(damage)
 	for m in game.minions:
-		if m.p.distance_to(e.target) < radius: m.hp -= damage*(1.0-float(m.get("dr",0)))
+		if m.p.distance_to(e.target) < radius: minion_combat.receive_damage(m,damage)
 
 func intercept(from: Vector2, to: Vector2, damage: float) -> bool:
 	for m in game.minions:
-		if m.hp > 0 and Math.segment_hits(from, to, m.p, 18): m.hp -= damage; return true
+		if m.hp > 0 and Math.segment_hits(from, to, m.p, 18): minion_combat.receive_damage(m,damage); return true
 	return false
 
 func push(enemy: Dictionary, distance: float) -> void:

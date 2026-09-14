@@ -8,9 +8,24 @@ var scenery: Array[Dictionary] = []
 const CENTERS = [Vector2(470, 1000), Vector2(1320, 690), Vector2(2210, 1050)]
 var centers: Array[Vector2] = [Vector2(470, 1000), Vector2(1320, 690), Vector2(2210, 1050)]
 var stage: Dictionary
+var collision_polygons:Array[PackedVector2Array]=[]
+var collision_bounds:Array[Rect2]=[]
+var collision_roads:Array[Dictionary]=[]
 
 func configure() -> void:
 	stage = game.active_stage()
+	collision_polygons.clear();collision_bounds.clear();collision_roads.clear()
+	for index in range(stage.roads.size()):
+		var road:Array=stage.roads[index]
+		for i in range(road.size()-1):
+			var a:=Vector2(road[i][0],road[i][1]);var b:=Vector2(road[i+1][0],road[i+1][1])
+			collision_roads.append({"a":a,"b":b,"bounds":Rect2(a,Vector2.ZERO).expand(b).grow(stage.road_width),"zone":maxi(stage.connections[index][0],stage.connections[index][1])})
+	for polygon in stage.polygons:
+		var points:=PackedVector2Array()
+		for pair in polygon:points.append(Vector2(pair[0],pair[1]))
+		var bounds:=Rect2(points[0],Vector2.ZERO)
+		for p in points:bounds=bounds.expand(p)
+		collision_polygons.append(points);collision_bounds.append(bounds.grow(.01))
 	centers.clear()
 	for pair in stage.centers: centers.append(Vector2(pair[0], pair[1]))
 	queue_redraw()
@@ -30,21 +45,15 @@ func _ready() -> void:
 func walkable(p: Vector2, through_zone: int = -1) -> bool:
 	for zone in range(stage.polygons.size()):
 		if through_zone >= 0 and zone > through_zone: continue
-		var polygon: Array = stage.polygons[zone]
-		var points := PackedVector2Array()
-		for pair in polygon: points.append(Vector2(pair[0], pair[1]))
-		if Geometry2D.is_point_in_polygon(p, points): return true
-	for road_index in range(stage.roads.size()):
-		if through_zone >= 0 and maxi(stage.connections[road_index][0], stage.connections[road_index][1]) > through_zone: continue
-		var road: Array = stage.roads[road_index]
-		for i in range(road.size() - 1):
-			var a := Vector2(road[i][0], road[i][1])
-			var b := Vector2(road[i + 1][0], road[i + 1][1])
-			if Geometry2D.get_closest_point_to_segment(p, a, b).distance_to(p) < stage.road_width: return true
+		if collision_bounds[zone].has_point(p) and Geometry2D.is_point_in_polygon(p, collision_polygons[zone]): return true
+	for road in collision_roads:
+		if through_zone>=0 and road.zone>through_zone:continue
+		if road.bounds.has_point(p) and Geometry2D.get_closest_point_to_segment(p,road.a,road.b).distance_squared_to(p)<stage.road_width*stage.road_width:return true
 	return false
 
 func _draw() -> void:
 	if game == null: return
+	if game.view3d != null and game.view3d.active():return
 	draw_rect(Rect2(-1000, -1000, 5000, 4000), Color(stage.sea))
 	for i in range(65):
 		var y := 300.0 + i * 24

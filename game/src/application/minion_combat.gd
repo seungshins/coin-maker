@@ -7,9 +7,9 @@ func summon(spec:Dictionary)->void:
 		if game.minions.size()>=4:game.minions.pop_front()
 		var p:Vector2=game.player+Vector2(-28 if i==0 else 28,25)
 		if not game.can_move(p):p=game.player
-		var hp:float=game.rules.stats(game.profile).hp*.65*float(spec.get("minion_hp",1))
+		var hp:float=game.rules.stats(game.profile).hp*float(game.rules.data.minion_base_hp)*float(spec.get("minion_hp",1))
 		var life:float=8.0 if spec.get("minion_blast",0)>0 else float(spec.get("duration",15))
-		game.minions.append({"type":type,"p":p,"hp":hp,"max_hp":hp,"damage":spec.damage,"life":life,"cd":.1,"dr":spec.get("minion_dr",0),"speed":spec.get("minion_speed",1),"blast":spec.get("minion_blast",0),"splash":spec.get("minion_splash",0),"knockback":spec.get("knockback",0)})
+		game.minions.append({"type":type,"p":p,"hp":hp,"max_hp":hp,"damage":spec.damage,"might_snapshot":might_multiplier(),"life":life,"cd":.1,"dr":1.0-(1.0-float(game.rules.data.minion_base_dr))*(1.0-float(spec.get("minion_dr",0))),"speed":spec.get("minion_speed",1),"blast":spec.get("minion_blast",0),"splash":spec.get("minion_splash",0),"knockback":spec.get("knockback",0)})
 		game.effects.append({"kind":"curse","p":p,"radius":45,"life":.4})
 	game.combat_audio.play_effect("curse")
 func update(delta:float)->void:
@@ -23,7 +23,7 @@ func update(delta:float)->void:
 				game.effects.append({"kind":"death","element":"fire","p":m.p,"life":.65})
 				game.combat_audio.play_effect("death_fire")
 				for e in game.enemies:
-					if not e.dead and int(e.zone)<=mini(game.profile.cleared.size(),game.zone_count()-1) and e.p.distance_to(m.p)<140:game.hit_enemy(e,m.damage*m.blast,false,"fire",0,false)
+					if not e.dead and int(e.zone)<=mini(game.profile.cleared.size(),game.zone_count()-1) and e.p.distance_to(m.p)<140:game.hit_enemy(e,attack_damage(m)*m.blast,false,"fire",0,false)
 			game.minions.remove_at(i);continue
 		var target:Dictionary={};var nearest:=450.0
 		for e in game.enemies:
@@ -40,7 +40,7 @@ func update(delta:float)->void:
 		if should_move:
 			var direction:Vector2=(destination-m.p).normalized()
 			for angle in [0.0,.8,-.8,1.5,-1.5,2.2,-2.2]:
-				var step:Vector2=m.p+direction.rotated(angle)*195*delta
+				var step:Vector2=m.p+direction.rotated(angle)*195*move_multiplier()*delta
 				if game.can_move(step):m.p=step;break
 		m.stuck=float(m.get("stuck",0))+delta if should_move and m.p.distance_to(destination)>=old_position.distance_to(destination)-.1 else 0.0
 		if m.p.distance_to(game.player)>600 or float(m.stuck)>1.2:
@@ -65,8 +65,19 @@ func cast(m:Dictionary,target:Dictionary)->void:
 			if type=="summon":hit=hit or (e.p.distance_to(m.p)<95 and absf((mark.p-m.p).angle_to(e.p-m.p))<.96)
 			if not hit:continue
 			victims[e.id]=true
-			game.hit_enemy(e,m.damage*(.75 if radius>0 else 1.0),false,element,m.get("knockback",0),false)
+			game.hit_enemy(e,attack_damage(m)*(.75 if radius>0 else 1.0),false,element,m.get("knockback",0),false)
 			if type=="siren_summon":e.slow_time=1.3;e.slow=.3
 		if type=="hydra_summon":
-			game.fields.append({"kind":"venom","p":mark.p,"radius":maxf(48,radius),"damage":m.damage*.12,"life":1.0,"tick":.5,"minion":true})
+			game.fields.append({"kind":"venom","p":mark.p,"radius":maxf(48,radius),"damage":attack_damage(m)*.12,"life":1.0,"tick":.5,"minion":true})
 	game.combat_audio.play_effect("curse" if type=="siren_summon" else "hit")
+
+func might_multiplier()->float:
+	return 1.0+game.rules.buff_value(game.profile,"might") if "might" in game.profile.get("buffs",[]) else 1.0
+func attack_damage(m:Dictionary)->float:
+	return float(m.damage)*might_multiplier()/float(m.get("might_snapshot",might_multiplier()))
+func move_multiplier()->float:
+	return 1.0+game.rules.buff_value(game.profile,"wind") if "wind" in game.profile.get("buffs",[]) else 1.0
+func receive_damage(m:Dictionary,amount:float)->void:
+	var reduction:float=1.0-clampf(float(m.get("dr",0)),0,.65)
+	if "ward" in game.profile.get("buffs",[]):reduction*=1.0-game.rules.buff_value(game.profile,"ward")
+	m.hp-=maxf(0,amount)*reduction

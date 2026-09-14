@@ -3,6 +3,8 @@ var warrior
 var view
 func _init(owner_view) -> void: view = owner_view
 func build(parent: Node3D, kind: String) -> void:
+	var variant:String=kind
+	kind={"shade":"hoplite","ember_priest":"gorgon","empusa":"gorgon"}.get(kind,kind)
 	if kind=="hero":
 		warrior=preload("res://src/presentation/warrior.gd").new(view)
 		warrior.build(parent)
@@ -81,6 +83,16 @@ func build(parent: Node3D, kind: String) -> void:
 			segment(body,Vector3((i-2)*.14,1.45+(i%2)*.15,0),.06,.4,skin)
 			view.mesh(body,head,Vector3((i-2)*.14,1.68+(i%2)*.15,.06),skin).scale=Vector3.ONE*.4
 
+	if variant=="shade":
+		for side in [-1,1]:view.box(body,Vector3(side*.065,1.27,.20),Vector3(.045,.03,.03),Color("79c7db"))
+	if variant in ["ember_priest","empusa"]:
+		for side in [-1,1]:
+			var spike:=CylinderMesh.new();spike.top_radius=0;spike.bottom_radius=.085;spike.height=.65
+			var horn:MeshInstance3D=view.mesh(body,spike,Vector3(side*.24,1.65,0),Color("91362c"));horn.rotation.z=-side*.5
+	if variant=="empusa":
+		for side in [-1,1]:
+			for i in range(4):
+				var wing:MeshInstance3D=view.box(body,Vector3(side*(.42+i*.13),1.10-i*.065,-.14),Vector3(.18,.65,.055),Color("452633"));wing.rotation.z=side*.65
 	# Layered anatomy and armour silhouettes, shared geometry stays inexpensive.
 	var detail=preload("res://src/presentation/warrior.gd").new(view)
 	for side in [-1,1]:

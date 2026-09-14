@@ -22,7 +22,7 @@ func run()->void:
 	for id in ["minion_guard","minion_haste","minion_blast","minion_splash"]:
 		p.gems.append({"id":id,"rarity":5});p.skill_supports.siren_summon.append(p.gems.size()-1)
 	var spec:Dictionary=g.rules.skill_spec(p)
-	check(spec.minion_hp==2.3 and spec.minion_speed==1.5 and spec.minion_splash==105,"summon support mechanics")
+	check(spec.minion_hp==3.3 and spec.minion_speed==1.5 and spec.minion_splash==105,"summon support mechanics")
 	g.enemies.clear();g.spawn_enemy(g.player+Vector2(75,0),0,"satyr",99999,123)
 	var enemy:Dictionary=g.enemies[0];enemy.hp=99999;enemy.max_hp=99999;enemy.affix=""
 	g.battle_extras.summon(spec);var m:Dictionary=g.minions[0];m.p=g.player

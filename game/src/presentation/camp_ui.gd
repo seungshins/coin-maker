@@ -290,7 +290,7 @@ func show_shop() -> void:
 		for weight in weights:total+=weight
 		var odds:="현재 획득 확률 · "
 		for i in range(6):odds+=game.rules.data.rarity_names[i]+" %.2f%%  "%(weights[i]/total*100)
-		game.text_line(box,"이번 레벨 뽑기 기회: %d / 3 · 다음 레벨에 3회로 충전 (이월 없음) · Lv100 최종 보스 처치 +1회 (최대3)\n"%int(p.get("gacha_left",3))+odds+"\n레벨·엔드게임 티어에 따라 상승 · 50회 보장: Lv1~19 마법+, Lv20~39 희귀+, Lv40+ 영웅+. 고등급도 필요 레벨 전까지 보관할 수 있습니다.")
+		game.text_line(box,"이번 레벨 뽑기 기회: %d / %d · 10레벨마다 한도 +1 (최대12) · 레벨업 시 충전, 이월 없음 · Lv100 최종 보스 +1회\n"%[int(p.get("gacha_left",3)),preload("res://src/domain/storage_rules.gd").gacha_limit(int(p.level))]+odds+"\n레벨·엔드게임 티어에 따라 상승 · 50회 보장: Lv1~19 마법+, Lv20~39 희귀+, Lv40+ 영웅+. 고등급도 필요 레벨 전까지 보관할 수 있습니다.")
 		var cells := grid(box, 3)
 		for kind in range(3):
 			var index := kind

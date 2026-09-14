@@ -395,7 +395,7 @@ func show_shop() -> void:
 
 func gacha(kind: int, shards: bool = false, weapon_filter:String="") -> void:
 	Storage.ensure(profile)
-	if int(profile.gacha_left)<=0:notify("이번 레벨의 뽑기 기회를 모두 사용했습니다. 다음 레벨에 3회 충전됩니다.");return
+	if int(profile.gacha_left)<=0:notify("이번 레벨의 뽑기 기회를 모두 사용했습니다. 다음 레벨에 %d회 충전됩니다."%Storage.gacha_limit(mini(100,int(profile.level)+1)));return
 	if action_lock or kind < 0 or kind > 2 or weapon_filter not in ["","sword","spear","wand","bow"]: return
 	var cost:int=rules.gacha_cost(profile,shards)
 	if (profile.shards < cost if shards else profile.gold < cost): return
@@ -465,6 +465,7 @@ func start_run() -> void:
 		camera.position = player
 		camera.reset_smoothing()
 		notify("저장한 전투를 이어갑니다.")
+		view3d.prepare_encounter()
 		return
 	# A save made on the victory screen must also permit a new voyage.
 	if profile.cleared.size() >= zone_count():
@@ -520,12 +521,16 @@ func start_run() -> void:
 	camera.position = player
 	camera.reset_smoothing()
 	checkpoint = profile.duplicate(true)
+	view3d.prepare_encounter()
 	notify("지도가 갱신되어 현재 구역 입구에서 이어갑니다. 획득 보상은 유지됩니다." if layout_rebuilt else "좌/우클릭 · Q/E/R/T 스킬 · 1 체력약 · 2 마나약")
 
 func spawn_enemy(p: Vector2, zone: int, kind: String, hp: float, id: int) -> void:
 	var elite := kind != "boss" and id % 100 % 7 == 4
 	if elite: hp *= 2.0
 	var model: String = active_stage().get("boss_model", "cyclops") if kind == "boss" else (["satyr", "hoplite", "harpy", "automaton"][posmod(int(profile.stage_id) + id, 4)])
+	if kind!="boss" and (int(profile.stage_id)>0 or int(profile.tier)>0):
+		if id%11==3:model="shade"
+		elif id%11==7:model="ember_priest";kind="archer"
 	enemies.append({"p": p, "zone": zone, "kind": kind, "model": model, "elite": elite, "hp": hp, "max_hp": hp, "id": id, "hit": 0.0, "stagger": 0.0, "cd": 0.5, "windup": 0.0, "target": p, "dead": false, "death_time": 0.0, "affix": ["swift", "fury", "titan"][posmod(id / 4, 3)] if elite or kind == "boss" else ""})
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -746,7 +751,7 @@ func hit_enemy(enemy: Dictionary, damage: float, melee: bool, element: String = 
 		battle_extras.push(enemy, (28.0 if melee else 7.0) + knockback)
 	if enemy.hp <= 0:
 		enemy.dead = true
-		if int(profile.level)>=100 and enemy.kind=="boss" and not enemy.get("miniboss",false):profile.gacha_left=mini(3,int(profile.get("gacha_left",0))+1)
+		if int(profile.level)>=100 and enemy.kind=="boss" and not enemy.get("miniboss",false):profile.gacha_left=mini(Storage.gacha_limit(int(profile.level)),int(profile.get("gacha_left",0))+1)
 		recharge_potions(.5 if enemy.kind=="boss" else (.2 if enemy.get("elite",false) else .08))
 		battle_extras.on_kill(enemy, element)
 		enemy.death_time = 0.8
@@ -783,7 +788,7 @@ func update_enemies(delta: float) -> void:
 			e.windup -= action_delta
 			if e.windup <= 0:
 				if e.kind == "archer":
-					bolts.append({"p": e.p, "v": (e.target - e.p).normalized() * 300, "life": 2.0, "damage": 12.0 * difficulty().damage * enemy_damage_rate(e), "friendly": false, "attack": -1})
+					bolts.append({"p": e.p, "v": (e.target - e.p).normalized() * 300, "life": 2.0, "damage": 12.0 * difficulty().damage * enemy_damage_rate(e), "friendly": false, "attack": -1,"skill_id":"fire_arrow" if e.model=="ember_priest" else ""})
 					if int(profile.tier) >= 8:
 						for angle in [-0.26, 0.26]: bolts.append({"p": e.p, "v": (e.target - e.p).normalized().rotated(angle) * 300, "life": 2.0, "damage": 12.0 * difficulty().damage * enemy_damage_rate(e), "friendly": false, "attack": -1})
 				else: battle_extras.enemy_strike(e, (35 if e.kind == "boss" else 10) * difficulty().damage * enemy_damage_rate(e))
@@ -798,7 +803,7 @@ func update_enemies(delta: float) -> void:
 			e.windup = 1.05 if e.kind == "boss" else 0.65
 			e.target = focus
 		elif dist > range_ * 0.7 and e.cd < 0.65:
-			var speed: float = (70.0 if e.kind == "boss" else 93.0) * difficulty().speed * enemy_action_rate(e)
+			var speed: float = (112.0 if e.get("model","")=="shade" else (70.0 if e.kind == "boss" else 93.0)) * difficulty().speed * enemy_action_rate(e)
 			if float(e.get("slow_time", 0)) > 0: speed *= 1.0 - float(e.get("slow", 0.3))
 			var destination: Vector2 = e.p + (focus - e.p).normalized() * speed * delta
 			var blocked := false

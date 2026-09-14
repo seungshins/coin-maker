@@ -1,11 +1,19 @@
 extends RefCounted
 
+static func gacha_limit(level:int)->int:
+	return mini(12,3+int(maxi(1,level)/10))
+
 static func ensure(p: Dictionary) -> void:
 	if not p.has("primary_weapon"):p.primary_weapon="sword"
 	if not p.has("skill_upgrades"):p.skill_upgrades={}
 	if not p.has("trigger_skills"):p.trigger_skills={}
-	if not p.has("gacha_level") or int(p.gacha_level)<int(p.level):p.gacha_level=int(p.level);p.gacha_left=3
-	if not p.has("gacha_left"):p.gacha_left=3
+	var limit:int=gacha_limit(int(p.level))
+	if not p.has("gacha_level") or int(p.gacha_level)<int(p.level):
+		p.gacha_level=int(p.level);p.gacha_left=limit;p.gacha_capacity=limit
+	else:
+		var old_capacity:int=int(p.get("gacha_capacity",3))
+		p.gacha_left=clampi(int(p.get("gacha_left",old_capacity))+maxi(0,limit-old_capacity),0,limit)
+		p.gacha_capacity=limit
 	if not p.has("stash_items"): p.stash_items = []
 	if not p.has("stash_gems"): p.stash_gems = []
 	if not p.has("loadout"):
